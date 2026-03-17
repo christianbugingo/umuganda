@@ -1,0 +1,126 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}My Dashboard - Umuganda Coordinator{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem;">
+    <!-- Left Sidebar - Profile -->
+    <div>
+        <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="width: 100px; height: 100px; background: #2E8B57; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                    {{ user.username|first|upper }}
+                </div>
+                <h3 style="margin-bottom: 0.5rem;">{{ user.get_full_name|default:user.username }}</h3>
+                <p style="color: #666;">Volunteer</p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 1rem;">
+                <h4 style="color: #2E8B57; margin-bottom: 1rem;">Profile Info</h4>
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Username:</strong><br>
+                    {{ user.username }}
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Email:</strong><br>
+                    {{ user.email|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Phone:</strong><br>
+                    {{ volunteer.phone|default:"Not provided" }}
+                </div>
+                {% if volunteer.community %}
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Community:</strong><br>
+                    {{ volunteer.community.village }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="color: #2E8B57; margin-bottom: 1rem;">Quick Stats</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="text-align: center; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2E8B57;">{{ total_projects }}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Projects</div>
+                </div>
+                <div style="text-align: center; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2E8B57;">0</div>
+                    <div style="font-size: 0.9rem; color: #666;">Hours</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content - Projects -->
+    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="color: #2E8B57; margin: 0;">My Projects ({{ total_projects }})</h2>
+        <a href="{% url 'project_list' %}" style="background: #2E8B57; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">
+            Find More Projects
+        </a>
+    </div>
+    
+    {% if participations %}
+        <div style="display: grid; gap: 1rem;">
+            {% for participation in participations %}
+            <div style="border: 1px solid #eee; border-radius: 8px; padding: 1.5rem; border-left: 4px solid #2E8B57;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 style="margin-top: 0; color: #2E8B57;">{{ participation.project.title }}</h3>
+                        <div style="color: #666; margin-bottom: 1rem;">
+                            <div><strong>Date:</strong> {{ participation.project.date }}</div>
+                            <div><strong>Location:</strong> {{ participation.project.community.village }}</div>
+                            <div><strong>Status:</strong> 
+                                <span style="padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.9rem; 
+                                    {% if participation.project.status == 'completed' %}
+                                        background: #d4edda; color: #155724;
+                                    {% elif participation.project.status == 'ongoing' %}
+                                        background: #fff3cd; color: #856404;
+                                    {% else %}
+                                        background: #d1ecf1; color: #0c5460;
+                                    {% endif %}">
+                                    {{ participation.project.get_status_display }}
+                                </span>
+                            </div>
+                            <div><strong>You signed up:</strong> {{ participation.signed_up_at|date:"M d, Y" }}</div>
+                            {% if participation.attended %}
+                            <div><strong>Hours contributed:</strong> {{ participation.hours_contributed }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'project_detail' participation.project.id %}" style="color: #2E8B57; text-decoration: none;">
+                        View Details →
+                    </a>
+                </div>
+                
+                {% if participation.attended %}
+                <div style="background: #d4edda; color: #155724; padding: 0.5rem; border-radius: 5px; margin-top: 1rem; text-align: center;">
+                    ✅ You attended this project and contributed {{ participation.hours_contributed }} hours
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #666;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+            <h3 style="color: #666; margin-bottom: 0.5rem;">No projects yet</h3>
+            <p style="margin-bottom: 1.5rem;">You haven't signed up for any community projects.</p>
+            <a href="{% url 'project_list' %}" style="background: #2E8B57; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 5px;">
+                Browse Available Projects
+            </a>
+        </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        .container > div {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

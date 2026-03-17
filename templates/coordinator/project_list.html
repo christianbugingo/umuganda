@@ -1,0 +1,201 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Upcoming Umuganda Projects{% endblock %}
+
+{% block content %}
+<style>
+    .header {
+        background: #2E8B57;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .back-link {
+        margin-bottom: 20px;
+    }
+    .back-link a {
+        color: #2E8B57;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .province-section {
+        background: white;
+        margin-bottom: 30px;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .province-title {
+        color: #2E8B57;
+        border-bottom: 2px solid #2E8B57;
+        padding-bottom: 10px;
+        margin-top: 0;
+    }
+    .project-card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border-left: 4px solid #2E8B57;
+    }
+    .project-title {
+        color: #2E8B57;
+        margin-top: 0;
+    }
+    .project-meta {
+        color: #666;
+        font-size: 0.9em;
+        margin: 5px 0;
+    }
+    .project-actions {
+        margin-top: 15px;
+    }
+    .btn {
+        background: #2E8B57;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn:hover {
+        background: #1c6b41;
+    }
+    .search-container {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .search-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    .form-group {
+        margin-bottom: 0;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #2E8B57;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .search-results {
+        background: #e8f5e8;
+        color: #2E8B57;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        border: 1px solid #c3e6cb;
+    }
+</style>
+
+<div class="header">
+    <h1>Upcoming Umuganda Projects</h1>
+    <p>Find community projects in your area and sign up to volunteer</p>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="search-container">
+    <form method="GET" class="search-form">
+        <div class="form-group">
+            <label for="search">Search Projects</label>
+            <input type="text" id="search" name="search" class="form-control"
+                   placeholder="Search by title, description, or location..."
+                   value="{{ search_query }}">
+        </div>
+
+        <div class="form-group">
+            <label for="province">Province</label>
+            <select id="province" name="province" class="form-control">
+                <option value="">All Provinces</option>
+                {% for province_code, province_name in available_provinces %}
+                    <option value="{{ province_code }}" {% if province_filter == province_code %}selected{% endif %}>
+                        {{ province_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="date_from">Date From</label>
+            <input type="date" id="date_from" name="date_from" class="form-control" value="{{ date_from }}">
+        </div>
+
+        <div class="form-group">
+            <label for="date_to">Date To</label>
+            <input type="date" id="date_to" name="date_to" class="form-control" value="{{ date_to }}">
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn">Search</button>
+            <a href="{% url 'project_list' %}" class="btn" style="background: #6c757d; margin-left: 10px;">Clear</a>
+        </div>
+    </form>
+</div>
+
+<!-- Search Results Info -->
+{% if search_query or province_filter or date_from or date_to %}
+    <div class="search-results">
+        <strong>Search Results:</strong> Found {{ total_projects }} project{{ total_projects|pluralize }}
+        {% if search_query %}for "{{ search_query }}"{% endif %}
+        {% if province_filter %} in {{ province_filter }}{% endif %}
+        {% if date_from or date_to %}
+            {% if date_from and date_to %}
+                between {{ date_from }} and {{ date_to }}
+            {% elif date_from %}
+                from {{ date_from }}
+            {% elif date_to %}
+                until {{ date_to }}
+            {% endif %}
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="back-link">
+    <a href="{% url 'home' %}">← Back to Home</a>
+</div>
+
+{% if projects_by_province %}
+    {% for province, projects in projects_by_province.items %}
+        <div class="province-section">
+            <h2 class="province-title">{{ province }}</h2>
+
+            {% for project in projects %}
+                <div class="project-card">
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    <div class="project-meta">
+                        <strong>Date:</strong> {{ project.date }}<br>
+                        <strong>Time:</strong> {{ project.start_time }} - {{ project.end_time }}<br>
+                        <strong>Location:</strong> {{ project.community.village }}, {{ project.community.cell }}, {{ project.community.sector }}<br>
+                        <strong>Volunteers needed:</strong> {{ project.needed_volunteers }}
+                    </div>
+                    <p>{{ project.description|truncatewords:30 }}</p>
+                    <div class="project-actions">
+                        <a href="{% url 'project_detail' project.id %}" class="btn">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-message">
+        <h3>No upcoming projects at the moment</h3>
+        <p>Check back later for new community projects in your area.</p>
+    </div>
+{% endif %}
+{% endblock %}

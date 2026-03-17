@@ -1,0 +1,153 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}{{ project.title }}{% endblock %}
+
+{% block content %}
+<style>
+    .header {
+        background: #2E8B57;
+        color: white;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .back-link {
+        margin-bottom: 20px;
+    }
+    .back-link a {
+        color: #2E8B57;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .project-detail {
+        background: white;
+        padding: 30px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .project-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+    .info-card {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #2E8B57;
+    }
+    .info-card h3 {
+        margin-top: 0;
+        color: #2E8B57;
+    }
+    .btn {
+        background: #2E8B57;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+    .btn:hover {
+        background: #1c6b41;
+    }
+    .btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+    }
+    .alert {
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+</style>
+
+<div class="header">
+    <h1>{{ project.title }}</h1>
+    <p>Umuganda Community Project</p>
+</div>
+
+<div class="back-link">
+    <a href="{% url 'project_list' %}">← Back to All Projects</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="project-detail">
+    <p>{{ project.description }}</p>
+
+    <div class="project-info">
+        <div class="info-card">
+            <h3>📅 Date & Time</h3>
+            <p><strong>Date:</strong> {{ project.date }}</p>
+            <p><strong>Time:</strong> {{ project.start_time }} - {{ project.end_time }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>📍 Location</h3>
+            <p><strong>Village:</strong> {{ project.community.village }}</p>
+            <p><strong>Cell:</strong> {{ project.community.cell }}</p>
+            <p><strong>Sector:</strong> {{ project.community.sector }}</p>
+            <p><strong>District:</strong> {{ project.community.district }}</p>
+            <p><strong>Province:</strong> {{ project.community.get_province_display }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>👥 Volunteers</h3>
+            <p><strong>Status:</strong> {{ project.get_status_display }}</p>
+            <p><strong>Volunteers needed:</strong> {{ project.needed_volunteers }}</p>
+            <p><strong>Already signed up:</strong> {{ current_participants }}</p>
+            <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; margin-top: 10px;">
+                <div style="background: #2E8B57; height: 100%; width: {% widthratio current_participants project.needed_volunteers 100 %}%; border-radius: 5px;"></div>
+            </div>
+            <small>{{ current_participants }} of {{ project.needed_volunteers }} volunteers</small>
+        </div>
+
+        <div class="info-card">
+            <h3>🏘️ Community Info</h3>
+            <p><strong>Population:</strong> {{ project.community.population }}</p>
+            <p><strong>Households:</strong> {{ project.community.households }}</p>
+            {% if project.community.leader %}
+                <p><strong>Community Leader:</strong> {{ project.community.leader.get_full_name }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+        {% if is_signed_up %}
+            <div class="alert alert-info">
+                ✓ You are already registered as a volunteer for this project.
+            </div>
+        {% else %}
+            <a href="{% url 'volunteer_signup' project.id %}" class="btn">
+                Sign Up as Volunteer
+            </a>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            Please <a href="{% url 'login' %}?next={{ request.path }}">login</a> to sign up as a volunteer.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Register - Umuganda Coordinator{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h2 style="color: #2E8B57; text-align: center; margin-bottom: 2rem;">Create Your Account</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="margin-bottom: 1.5rem;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="POST">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    {{ field.label }}
+                    {% if field.field.required %}<span style="color: red;">*</span>{% endif %}
+                </label>
+                
+                {{ field }}
+                
+                {% if field.help_text %}
+                    <small style="color: #666; display: block; margin-top: 0.25rem;">{{ field.help_text }}</small>
+                {% endif %}
+                
+                {% if field.errors %}
+                    <div style="color: red; font-size: 0.9em; margin-top: 0.25rem;">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" style="width: 100%; padding: 0.75rem; background: #2E8B57; color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-bottom: 1.5rem;">
+            Register
+        </button>
+        
+        <div style="text-align: center;">
+            <p>Already have an account? <a href="{% url 'login' %}" style="color: #2E8B57;">Login here</a></p>
+        </div>
+    </form>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #2E8B57;
+        box-shadow: 0 0 0 2px rgba(46, 139, 87, 0.2);
+    }
+    
+    .helptext {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+{% endblock %}

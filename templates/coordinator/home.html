@@ -1,0 +1,74 @@
+{% extends 'coordinator/base.html' %}
+{% load static %}
+
+{% block title %}Home - Umuganda Coordinator{% endblock %}
+
+{% block content %}
+<div class="header" style="background: #2E8B57; color: white; padding: 3rem; text-align: center; border-radius: 5px; margin-bottom: 2rem;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Umuganda Community Coordinator</h1>
+    <p style="font-size: 1.2rem;">Organize, Track, and Communicate Community Projects</p>
+</div>
+
+<div class="content" style="background: white; padding: 2rem; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="color: #2E8B57; margin-bottom: 1rem;">Welcome to the Umuganda Platform</h2>
+    <p style="margin-bottom: 2rem;">This platform helps Rwandan communities organize their monthly Umuganda activities efficiently.</p>
+    
+    <div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
+            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">📋 Project Tracking</h3>
+            <p>Plan and monitor community projects from start to finish.</p>
+        </div>
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
+            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">👥 Volunteer Sign-ups</h3>
+            <p>Community members can easily sign up for projects.</p>
+        </div>
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
+            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">🏆 Achievements</h3>
+            <p>Recognize active volunteers with badges and awards.</p>
+        </div>
+    </div>
+
+    <!-- Photo Gallery -->
+    <div style="margin: 2rem 0;">
+        <h2 style="color: #2E8B57; margin-bottom: 1rem; text-align: center;">See Umuganda in Action</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Community building a wall" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Pathway Cleanup</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #444;">A cleanup day in a rural sector, improving access for everyone</p>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="People planting trees" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Building Together</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #444;">HE Paul Kagame with Volunteers working together to build a community shelter in Kigali.</p>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers clearing a path" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Green Community</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #444;">Volunteers with recognised security bodies from a local district team up for neighborhood landscaping.</p>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Team of volunteers planting" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Tree Planting</h4>
+                    <p style="margin: 0; font-size: 0.9rem; color: #444;">Community members planting trees to green their neighborhood in the Eastern Province.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: white; border-radius: 5px;">
+        <h2 style="color: #2E8B57; margin-bottom: 1rem;">Ready to Make a Difference?</h2>
+        <p style="margin-bottom: 1.5rem;">Join upcoming community projects in your area and contribute to Rwanda's development.</p>
+        <a href="{% url 'project_list' %}" style="display: inline-block; background: #2E8B57; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            View Upcoming Projects
+        </a>
+    </div>
+</div>
+{% endblock %}

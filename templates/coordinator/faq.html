@@ -1,0 +1,157 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}FAQ - Umuganda Community Coordinator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="h3 mb-0">Frequently Asked Questions</h1>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
+                                What is Umuganda?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Umuganda is a Rwandan tradition of community service where people come together to work on community projects. It typically occurs on the last Saturday of each month and helps maintain community infrastructure, clean public spaces, and foster unity among citizens.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                                How do I sign up for a project?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                First, create an account by clicking "Register" in the navigation. Then browse available projects on the "Projects" page. Click on any project to view details, and if you're interested, click the "Sign Up" button. You'll receive confirmation and the project will appear in your dashboard.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                                What should I bring to a project?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Most projects require basic work tools like gloves, hats for sun protection, sturdy shoes, and water bottles. Some projects may have specific requirements listed in the project description. Always check the project details before attending.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                                What if I can't attend a project I signed up for?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Please notify the project coordinator as soon as possible if you cannot attend. You can contact them through the platform or directly. This allows them to find replacement volunteers and ensures the project can proceed successfully.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                                How are projects organized?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Projects are organized by Rwanda's administrative divisions: Province, District, Sector, Cell, and Village (Umudugudu). This ensures projects are accessible to local community members and address specific local needs.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">
+                                Can I create my own project?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Currently, projects are created by community coordinators and administrators. If you have a project idea, please contact your local community leader or use the contact form to suggest it. We may add community project proposal features in the future.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" aria-expanded="false" aria-controls="faq7">
+                                Is there a cost to participate?
+                            </button>
+                        </h2>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                No, participation in Umuganda projects is completely free. The platform is designed to make community service accessible to all Rwandan citizens. Some projects may provide refreshments or small incentives, but these are not guaranteed.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8" aria-expanded="false" aria-controls="faq8">
+                                How do I track my volunteer hours?
+                            </button>
+                        </h2>
+                        <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Your volunteer hours are tracked in your dashboard. After attending a project, coordinators mark your attendance and log the hours contributed. You can view your total hours and project history anytime in your dashboard.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq9" aria-expanded="false" aria-controls="faq9">
+                                Who can use this platform?
+                            </button>
+                        </h2>
+                        <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                The platform is designed for all Rwandan citizens interested in community service. You must be 18 or older to create an account, or have parental consent if younger. Community coordinators and administrators have additional access to manage projects.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq10" aria-expanded="false" aria-controls="faq10">
+                                How do I contact support?
+                            </button>
+                        </h2>
+                        <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can contact us through the information in the footer: email info@umuganda.rw or call +250 788 123 456. For project-specific questions, contact the project coordinator directly through the project details page.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h5>Still have questions?</h5>
+                    <p>If you couldn't find the answer to your question, please don't hesitate to contact us:</p>
+                    <p><strong>Email:</strong> support@umuganda.rw<br>
+                    <strong>Phone:</strong> +250 788 123 456</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
