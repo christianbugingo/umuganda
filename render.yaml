@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: umuganda
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m waitress --port=$PORT umuganda.wsgi:application
