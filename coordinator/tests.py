@@ -35,6 +35,7 @@ class HomePageTests(TestCase):
         self.assertContains(response, "height: clamp(210px, 30vh, 320px)")
         self.assertContains(response, "width: max(100vw, calc(clamp(210px, 30vh, 320px) * 16 / 9))")
         self.assertContains(response, "enablejsapi: \"1\"")
+        self.assertContains(response, 'mute: "1"')
         self.assertContains(response, "origin: window.location.origin")
         self.assertContains(response, "event.target.mute()")
         self.assertContains(response, "event.target.loadVideoById(secondVideo)")
