@@ -85,6 +85,23 @@ class Volunteer(models.Model):
         return self.user.username
     class Meta:
         verbose_name_plural = "Volunteers"
+
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('volunteer', 'Volunteer'),
+        ('leader', 'Community leader'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='volunteer')
+    phone = models.CharField(max_length=15, blank=True)
+    photo = models.ImageField(upload_to='profile_photos/', blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.get_role_display()})"
+
+
 class Participation(models.Model):
     """Tracks which volunteers are participating in which projects"""
     volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE)

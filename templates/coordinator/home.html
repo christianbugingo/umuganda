@@ -4,10 +4,224 @@
 {% block title %}Home - Umuganda Coordinator{% endblock %}
 
 {% block content %}
-<div class="header" style="background: #2E8B57; color: white; padding: 3rem; text-align: center; border-radius: 5px; margin-bottom: 2rem;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Umuganda Community Coordinator</h1>
-    <p style="font-size: 1.2rem;">Organize, Track, and Communicate Community Projects</p>
-</div>
+<style>
+    .home-hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+        overflow: hidden;
+        min-height: 440px;
+        margin-bottom: 2rem;
+        padding: clamp(2rem, 5vw, 4.5rem);
+        border: 1px solid #d8e9dc;
+        border-radius: 28px;
+        background:
+            radial-gradient(ellipse at 3% 100%, rgba(166, 211, 176, .35), transparent 42%),
+            linear-gradient(125deg, #f4faf5, #fff 65%);
+        box-shadow: 0 18px 48px rgba(27, 75, 44, .1);
+    }
+    .home-hero-copy { position: relative; z-index: 2; }
+    .home-date {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        margin-bottom: 1.35rem;
+        color: #236c40;
+        font-size: .83rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .home-date::before {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #2e8b57;
+        content: "";
+    }
+    .home-hero h1 {
+        max-width: 13ch;
+        margin: 0 0 1rem;
+        color: #173d27;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(2.6rem, 5vw, 4.5rem);
+        font-weight: 500;
+        letter-spacing: -.055em;
+        line-height: 1.04;
+    }
+    .home-hero-copy > p {
+        max-width: 39rem;
+        margin-bottom: 1.7rem;
+        color: #53665a;
+        font-size: 1.08rem;
+        line-height: 1.75;
+    }
+    .home-hero-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .9rem 1.25rem;
+        border-radius: 999px;
+        background: #247344;
+        box-shadow: 0 8px 18px rgba(36, 115, 68, .18);
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s ease, transform .2s ease;
+    }
+    .home-hero-link:hover { transform: translateY(-2px); background: #195b35; color: white; }
+    .home-slideshow {
+        position: relative;
+        min-width: 0;
+        padding: 0 0 2.7rem 1rem;
+    }
+    .home-slideshow::before {
+        position: absolute;
+        top: -1.2rem;
+        right: -1rem;
+        width: 8rem;
+        height: 8rem;
+        border: 1px solid rgba(46, 139, 87, .24);
+        border-radius: 50%;
+        content: "";
+    }
+    .home-slide {
+        position: absolute;
+        inset: 0 0 2.7rem 1rem;
+        overflow: hidden;
+        border-radius: 28% 8% 24% 8% / 12% 20% 10% 22%;
+        background: #dcebe0;
+        box-shadow: 0 20px 42px rgba(25, 62, 37, .2);
+        opacity: 0;
+        transform: translateX(14px) scale(.985);
+        transition: opacity .55s ease, transform .7s ease, border-radius .7s ease;
+        pointer-events: none;
+    }
+    .home-slide.is-active {
+        position: relative;
+        inset: auto;
+        aspect-ratio: 1.28;
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        pointer-events: auto;
+    }
+    .home-slide:nth-child(2) { border-radius: 8% 28% 8% 24% / 20% 10% 22% 12%; }
+    .home-slide:nth-child(3) { border-radius: 36% 8% 8% 26% / 18% 24% 10% 12%; }
+    .home-slide:nth-child(4) { border-radius: 8% 24% 34% 8% / 22% 12% 18% 10%; }
+    .home-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .home-slide::after {
+        position: absolute;
+        inset: 35% 0 0;
+        background: linear-gradient(transparent, rgba(13, 37, 22, .76));
+        content: "";
+    }
+    .home-slide-caption {
+        position: absolute;
+        z-index: 1;
+        right: 1.3rem;
+        bottom: 1.25rem;
+        left: 1.3rem;
+        color: #fff;
+    }
+    .home-slide-caption span {
+        display: block;
+        margin-bottom: .2rem;
+        color: #d5f0dc;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+    .home-slide-caption strong { font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; }
+    .home-slide-controls {
+        position: absolute;
+        z-index: 2;
+        right: .2rem;
+        bottom: 0;
+        left: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .home-slide-dots { display: flex; gap: .45rem; }
+    .home-slide-dots button, .home-slide-arrow {
+        display: grid;
+        width: 2.45rem;
+        height: 2.45rem;
+        place-items: center;
+        border: 1px solid #cbded0;
+        border-radius: 50%;
+        background: #fff;
+        color: #246d40;
+        cursor: pointer;
+    }
+    .home-slide-dots button { width: 1.6rem; height: 1.6rem; }
+    .home-slide-dots button[aria-current="true"] { border-color: #247344; background: #247344; }
+    .home-slide-arrows { display: flex; gap: .45rem; }
+    .home-slide-arrow:hover, .home-slide-dots button:hover { background: #e7f4eb; }
+    .content {
+        border: 1px solid #e5ece6;
+        border-radius: 20px !important;
+        box-shadow: 0 14px 38px rgba(27, 75, 44, .07) !important;
+    }
+    .features .feature {
+        border-radius: 14px !important;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .features .feature:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(27, 75, 44, .1); }
+    @media (max-width: 760px) {
+        .home-hero { grid-template-columns: 1fr; gap: 2rem; padding: 2rem 1.35rem; }
+        .home-hero h1 { font-size: clamp(2.5rem, 12vw, 3.7rem); }
+        .home-slideshow { padding-left: 0; }
+        .home-slide-controls { left: 0; }
+        .home-slide { left: 0; }
+        .home-slide.is-active { inset: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .home-slide, .home-hero-link, .features .feature { transition: none; }
+    }
+</style>
+
+<section class="home-hero" aria-label="Umuganda community work">
+    <div class="home-hero-copy">
+        <div class="home-date">{% now "l, F j, Y" %}</div>
+        <h1>Small acts.<br>Stronger communities.</h1>
+        <p>Bring neighbors together to care for our communities. Discover local projects, lend a hand, and help Rwanda thrive.</p>
+        <a class="home-hero-link" href="{% url 'project_list' %}">Explore community projects <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="home-slideshow" data-slideshow aria-label="Community project highlights">
+        <figure class="home-slide is-active">
+            <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Neighbors working together to improve a community pathway">
+            <figcaption class="home-slide-caption"><span>Working together</span><strong>Cleaner paths, closer communities</strong></figcaption>
+        </figure>
+        <figure class="home-slide">
+            <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="Community members joining efforts on a local project">
+            <figcaption class="home-slide-caption"><span>Building together</span><strong>Every helping hand makes a difference</strong></figcaption>
+        </figure>
+        <figure class="home-slide">
+            <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers improving shared neighborhood spaces">
+            <figcaption class="home-slide-caption"><span>Growing together</span><strong>Shared work, lasting impact</strong></figcaption>
+        </figure>
+        <figure class="home-slide">
+            <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Volunteers planting trees in their community">
+            <figcaption class="home-slide-caption"><span>Greener together</span><strong>Planting a better future</strong></figcaption>
+        </figure>
+        <div class="home-slide-controls">
+            <div class="home-slide-dots" aria-label="Choose a featured image">
+                <button type="button" aria-label="Show image 1" aria-current="true" data-slide-to="0"></button>
+                <button type="button" aria-label="Show image 2" aria-current="false" data-slide-to="1"></button>
+                <button type="button" aria-label="Show image 3" aria-current="false" data-slide-to="2"></button>
+                <button type="button" aria-label="Show image 4" aria-current="false" data-slide-to="3"></button>
+            </div>
+            <div class="home-slide-arrows">
+                <button type="button" class="home-slide-arrow" aria-label="Previous image" data-slide-previous>←</button>
+                <button type="button" class="home-slide-arrow" aria-label="Next image" data-slide-next>→</button>
+            </div>
+        </div>
+    </div>
+</section>
 
 <div class="content" style="background: white; padding: 2rem; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <h2 style="color: #2E8B57; margin-bottom: 1rem;">Welcome to the Umuganda Platform</h2>
@@ -71,4 +285,61 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    (() => {
+        const slideshow = document.querySelector("[data-slideshow]");
+        if (!slideshow) return;
+
+        const slides = [...slideshow.querySelectorAll(".home-slide")];
+        const dots = [...slideshow.querySelectorAll("[data-slide-to]")];
+        let activeIndex = 0;
+        let timer;
+
+        const showSlide = (index) => {
+            activeIndex = (index + slides.length) % slides.length;
+            slides.forEach((slide, i) => {
+                slide.classList.toggle("is-active", i === activeIndex);
+                slide.setAttribute("aria-hidden", i === activeIndex ? "false" : "true");
+            });
+            dots.forEach((dot, i) => dot.setAttribute("aria-current", i === activeIndex ? "true" : "false"));
+        };
+        const stopTimer = () => window.clearInterval(timer);
+        const startTimer = () => {
+            stopTimer();
+            if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                timer = window.setInterval(() => showSlide(activeIndex + 1), 6000);
+            }
+        };
+
+        dots.forEach((dot) => dot.addEventListener("click", () => {
+            showSlide(Number(dot.dataset.slideTo));
+            startTimer();
+        }));
+        slideshow.querySelector("[data-slide-previous]").addEventListener("click", () => {
+            showSlide(activeIndex - 1);
+            startTimer();
+        });
+        slideshow.querySelector("[data-slide-next]").addEventListener("click", () => {
+            showSlide(activeIndex + 1);
+            startTimer();
+        });
+        slideshow.addEventListener("mouseenter", stopTimer);
+        slideshow.addEventListener("mouseleave", startTimer);
+        slideshow.addEventListener("focusin", stopTimer);
+        slideshow.addEventListener("focusout", (event) => {
+            if (!slideshow.contains(event.relatedTarget)) startTimer();
+        });
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) stopTimer();
+            else startTimer();
+        });
+
+        showSlide(0);
+        startTimer();
+    })();
+</script>
 {% endblock %}

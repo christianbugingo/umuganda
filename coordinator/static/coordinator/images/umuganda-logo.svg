@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-labelledby="title">
+  <title id="title">Umuganda community emblem</title>
+  <circle cx="40" cy="40" r="37" fill="#e7f4eb"/>
+  <circle cx="40" cy="40" r="30" fill="none" stroke="#2e8b57" stroke-width="3"/>
+  <path d="M40 55V34m0 13c-9 0-15-5-16-13 9 0 15 5 16 13Zm0-7c0-9 5-15 13-17 1 9-4 15-13 17Z" fill="none" stroke="#2e8b57" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <path d="M26 57h28" fill="none" stroke="#2e8b57" stroke-linecap="round" stroke-width="3"/>
+  <circle cx="25" cy="28" r="4" fill="#2e8b57"/>
+  <circle cx="55" cy="28" r="4" fill="#2e8b57"/>
+  <path d="M18 43c0-5 3-8 7-8s7 3 7 8m16 0c0-5 3-8 7-8s7 3 7 8" fill="none" stroke="#2e8b57" stroke-linecap="round" stroke-width="3"/>
+</svg>

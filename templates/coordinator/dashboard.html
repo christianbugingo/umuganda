@@ -8,11 +8,16 @@
     <div>
         <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;">
             <div style="text-align: center; margin-bottom: 1rem;">
-                <div style="width: 100px; height: 100px; background: #2E8B57; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                    {{ user.username|first|upper }}
-                </div>
+                {% if profile.photo %}
+                    <img src="{{ profile.photo.url }}" alt="Profile photo" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin: 0 auto 1rem;">
+                {% else %}
+                    <div style="width: 100px; height: 100px; background: #2E8B57; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                        {{ user.username|first|upper }}
+                    </div>
+                {% endif %}
                 <h3 style="margin-bottom: 0.5rem;">{{ user.get_full_name|default:user.username }}</h3>
                 <p style="color: #666;">Volunteer</p>
+                <a href="{% url 'profile_edit' %}" class="btn btn-sm btn-outline-success">Edit Profile</a>
             </div>
             
             <div style="border-top: 1px solid #eee; padding-top: 1rem;">
@@ -46,7 +51,7 @@
                     <div style="font-size: 0.9rem; color: #666;">Projects</div>
                 </div>
                 <div style="text-align: center; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #2E8B57;">0</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #2E8B57;">{{ total_hours }}</div>
                     <div style="font-size: 0.9rem; color: #666;">Hours</div>
                 </div>
             </div>

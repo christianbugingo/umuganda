@@ -76,3 +76,18 @@ The system follows Rwanda's official administrative structure:
 ```bash
 git clone https://github.com/christianbugingo/umuganda.git
 cd umuganda
+```
+
+### Run locally
+
+Install the dependencies, create the database tables, and start the development server:
+
+```bash
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
+```
+
+Open `http://localhost:8000/` when running on your computer. If the project is running
+in a remote workspace or Codespace, forward port **8000** in the editor and open its
+forwarded URL in Safari; `localhost` on your computer does not point to a remote workspace.
