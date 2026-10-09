@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth import logout
 from django.db.models import Q
+from django.utils import timezone
 from functools import wraps
 from coordinator.forms import (
     LeaderRegisterForm,
@@ -42,9 +43,10 @@ def project_list(request):
     date_to = request.GET.get('date_to', '')
 
     # Base queryset
-    projects = UmugandaProject.objects.filter(status='planned').select_related(
-        'community'
-    ).order_by('date')
+    projects = UmugandaProject.objects.filter(
+        status='planned',
+        date__gte=timezone.localdate(),
+    ).select_related('community').order_by('date')
 
     # Apply search filter
     if search_query:
@@ -114,26 +116,26 @@ def project_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'available_provinces': Community.PROVINCE_CHOICES,
-        'available_districts': districts.values_list('district', flat=True).distinct().order_by('district'),
-        'available_sectors': sectors.values_list('sector', flat=True).distinct().order_by('sector'),
-        'available_cells': cells.values_list('cell', flat=True).distinct().order_by('cell'),
-        'available_villages': villages.values_list('village', flat=True).distinct().order_by('village'),
+        'available_districts': districts.exclude(district='').values_list('district', flat=True).distinct().order_by('district'),
+        'available_sectors': sectors.exclude(sector='').values_list('sector', flat=True).distinct().order_by('sector'),
+        'available_cells': cells.exclude(cell='').values_list('cell', flat=True).distinct().order_by('cell'),
+        'available_villages': villages.exclude(village='').values_list('village', flat=True).distinct().order_by('village'),
     }
     return render(request, 'coordinator/project_list.html', context)
 
 def project_detail(request, project_id):
     """Show details of a specific project"""
-    project = get_object_or_404(UmugandaProject, id=project_id)
+    project = get_object_or_404(
+        UmugandaProject,
+        id=project_id,
+        status='planned',
+        date__gte=timezone.localdate(),
+    )
     # Get participants for this project
     participants = Participation.objects.filter(project=project).select_related('volunteer__user')
     
     # Check if user is already signed up
-    is_signed_up = False
-    if request.user.is_authenticated:
-        is_signed_up = Volunteer.objects.filter(
-            user=request.user, 
-            community=project.community
-        ).exists()
+    is_signed_up = project.is_user_signed_up(request.user)
     
     context = {
         'project': project,
@@ -147,7 +149,12 @@ def project_detail(request, project_id):
 @login_required
 def volunteer_signup(request, project_id):
     """Sign up a user as a volunteer for a project"""
-    project = get_object_or_404(UmugandaProject, id=project_id)
+    project = get_object_or_404(
+        UmugandaProject,
+        id=project_id,
+        status='planned',
+        date__gte=timezone.localdate(),
+    )
     profile, _ = UserProfile.objects.get_or_create(
         user=request.user,
         defaults={'role': 'volunteer'},
@@ -161,19 +168,19 @@ def volunteer_signup(request, project_id):
         user=request.user,
         defaults={'phone': profile.phone}
     )
-   #Check if already signed up
+    # Check if already signed up
     if Participation.objects.filter(volunteer=volunteer, project=project).exists():
         messages.info(request, "You are already signed up for this project!")
     else:
         # Create participation record
         Participation.objects.create(volunteer=volunteer, project=project)
+        messages.success(request, f"You have successfully signed up for {project.title}!")
     
     # Update community if not set
     if not volunteer.community:
         volunteer.community = project.community
         volunteer.save()
     
-    messages.success(request, f"You have successfully signed up for {project.title}!")
     return redirect('project_detail', project_id=project_id)
 def register(request):
     """Handle user registration"""
@@ -270,13 +277,26 @@ def _profile_for(user):
     volunteer_phone = Volunteer.objects.filter(user=user).values_list(
         'phone', flat=True
     ).first()
+    assigned_community = Community.objects.filter(leader=user).first()
     profile, _ = UserProfile.objects.get_or_create(
         user=user,
         defaults={
-            'role': 'leader' if Community.objects.filter(leader=user).exists() else 'volunteer',
+            'role': 'leader' if assigned_community else 'volunteer',
+            'leader_type': 'village' if assigned_community else '',
+            'community': assigned_community,
+            'province': assigned_community.province if assigned_community else '',
+            'district': assigned_community.district if assigned_community else '',
+            'sector': assigned_community.sector if assigned_community else '',
+            'cell': assigned_community.cell if assigned_community else '',
+            'village': assigned_community.village if assigned_community else '',
+            'is_approved': False,
             'phone': volunteer_phone or '',
         },
     )
+    if profile.role == 'leader' and not profile.community_id and assigned_community:
+        profile.community = assigned_community
+        profile.leader_type = profile.leader_type or 'village'
+        profile.save(update_fields=['community', 'leader_type'])
     return profile
 
 
@@ -285,9 +305,16 @@ def role_required(role):
         @login_required
         @wraps(view)
         def wrapped(request, *args, **kwargs):
-            if _profile_for(request.user).role != role:
+            profile = _profile_for(request.user)
+            if profile.role != role:
                 messages.error(request, "You don't have access to that dashboard.")
                 return redirect('dashboard')
+            if role == 'leader' and not profile.is_approved:
+                messages.info(
+                    request,
+                    "Your leader application is awaiting administrator approval.",
+                )
+                return redirect('home')
             return view(request, *args, **kwargs)
         return wrapped
     return decorator
@@ -297,10 +324,12 @@ def leader_register(request):
     if request.method == 'POST':
         form = LeaderRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, "Your leader account is ready. Post a project announcement from your dashboard.")
-            return redirect('leader_dashboard')
+            form.save()
+            messages.success(
+                request,
+                "Your leader application was submitted. You can sign in after an administrator verifies and approves it.",
+            )
+            return redirect('leader_login')
     else:
         form = LeaderRegisterForm()
     return render(request, 'coordinator/leader_register.html', {'form': form})
@@ -311,8 +340,14 @@ def _handle_login(request, *, leader):
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            is_leader = _profile_for(user).role == 'leader'
-            if is_leader != leader:
+            profile = _profile_for(user)
+            is_leader = profile.role == 'leader'
+            if is_leader and not profile.is_approved:
+                form.add_error(
+                    None,
+                    "Your leader application is awaiting administrator approval.",
+                )
+            elif is_leader != leader:
                 form.add_error(None, "Please use the sign-in page for your account type.")
             else:
                 login(request, user)
@@ -363,7 +398,7 @@ def volunteer_dashboard(request):
 @role_required('leader')
 def leader_dashboard(request):
     profile = _profile_for(request.user)
-    communities = Community.objects.filter(leader=request.user)
+    communities = profile.managed_communities()
     if request.method == 'POST':
         form = ProjectForm(request.POST, communities=communities)
         if form.is_valid():
@@ -380,9 +415,47 @@ def leader_dashboard(request):
     return render(request, 'coordinator/leader_dashboard.html', {
         'profile': profile,
         'communities': communities,
+        'managed_area': profile.managed_area_label(),
         'project_form': form,
         'projects': projects,
+        'today': timezone.localdate(),
     })
+
+
+@role_required('leader')
+def leader_project_edit(request, project_id):
+    project = get_object_or_404(
+        UmugandaProject.objects.select_related('community'),
+        pk=project_id,
+        created_by=request.user,
+    )
+    communities = _profile_for(request.user).managed_communities()
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, communities=communities, instance=project)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Project announcement '{project.title}' has been updated.")
+            return redirect('leader_dashboard')
+    else:
+        form = ProjectForm(communities=communities, instance=project)
+    return render(request, 'coordinator/leader_project_edit.html', {
+        'form': form,
+        'project': project,
+    })
+
+
+@role_required('leader')
+def leader_project_delete(request, project_id):
+    project = get_object_or_404(
+        UmugandaProject,
+        pk=project_id,
+        created_by=request.user,
+    )
+    if request.method == 'POST':
+        title = project.title
+        project.delete()
+        messages.success(request, f"Project announcement '{title}' has been deleted.")
+    return redirect('leader_dashboard')
 
 
 @login_required

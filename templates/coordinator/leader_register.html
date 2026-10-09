@@ -6,24 +6,51 @@
 <div class="card mx-auto shadow-sm" style="max-width: 620px;">
     <div class="card-body p-4">
         <h1 class="h3 text-success mb-3">Create a community leader account</h1>
-        <p>Choose your community during registration. You can post project announcements for that community from your leader dashboard.</p>
-        {% if not form.fields.community.queryset %}
-            <div class="alert alert-info">No unassigned communities are available yet. Ask an administrator to add your community first.</div>
-        {% endif %}
+        <p>Choose your leadership level and enter the administrative area you manage. Suggestions include areas already entered, but you can type a new area if it is missing. Only the fields up to your level are required. Your application must be verified by an administrator before leader access is enabled.</p>
         <form method="post">
             {% csrf_token %}
             {% for field in form %}
-                <div class="mb-3">
+                <div class="mb-3" {% if field.name == 'province' or field.name == 'district' or field.name == 'sector' or field.name == 'cell' or field.name == 'village' %}data-location-field="{{ field.name }}"{% endif %}>
                     <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
+                    {% for field_name, options in form.location_suggestions.items %}
+                        {% if field.name == field_name %}
+                            <datalist id="{{ field_name }}-location-options">
+                                {% for option in options %}
+                                    <option value="{{ option }}">
+                                {% endfor %}
+                            </datalist>
+                        {% endif %}
+                    {% endfor %}
                     {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
                     {% for error in field.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
                 </div>
             {% endfor %}
             {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
-            <button class="btn btn-success w-100" type="submit" {% if not form.fields.community.queryset %}disabled{% endif %}>Create Leader Account</button>
+            <button class="btn btn-success w-100" type="submit">Submit Leader Application</button>
         </form>
         <p class="mt-3 mb-0 text-center">Already a leader? <a href="{% url 'leader_login' %}">Sign in here</a>.</p>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    (() => {
+        const leaderType = document.getElementById("id_leader_type");
+        const levels = { province: 1, district: 2, sector: 3, cell: 4, village: 5 };
+        const updateLocationFields = () => {
+            const requiredThrough = levels[leaderType.value] || 0;
+            for (const [name, level] of Object.entries(levels)) {
+                const row = document.querySelector(`[data-location-field="${name}"]`);
+                const input = document.getElementById(`id_${name}`);
+                row.hidden = level > requiredThrough;
+                input.required = level <= requiredThrough;
+            }
+        };
+        leaderType.addEventListener("change", updateLocationFields);
+        updateLocationFields();
+    })();
+</script>
 {% endblock %}

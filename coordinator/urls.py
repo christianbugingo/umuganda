@@ -10,6 +10,16 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/volunteer/', views.volunteer_dashboard, name='volunteer_dashboard'),
     path('dashboard/leader/', views.leader_dashboard, name='leader_dashboard'),
+    path(
+        'dashboard/leader/projects/<int:project_id>/edit/',
+        views.leader_project_edit,
+        name='leader_project_edit',
+    ),
+    path(
+        'dashboard/leader/projects/<int:project_id>/delete/',
+        views.leader_project_delete,
+        name='leader_project_delete',
+    ),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('login/', views.user_login, name='login'),
     path('leaders/register/', views.leader_register, name='leader_register'),

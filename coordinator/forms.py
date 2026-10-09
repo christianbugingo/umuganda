@@ -25,6 +25,7 @@ class RegisterForm(UserCreationForm):
                 user=user,
                 role='volunteer',
                 phone=self.cleaned_data['phone'],
+                is_approved=True,
             )
         return user
 
@@ -42,21 +43,102 @@ class LoginForm(AuthenticationForm):
 class LeaderRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
     phone = forms.CharField(max_length=15, required=True)
-    community = forms.ModelChoiceField(
-        queryset=Community.objects.none(),
-        empty_label="Select your community",
+    leader_type = forms.ChoiceField(
+        choices=UserProfile.LEADER_TYPE_CHOICES,
+        label="Leader type",
     )
+    province = forms.ChoiceField(
+        choices=[("", "Select a province"), *Community.PROVINCE_CHOICES],
+    )
+    district = forms.CharField(max_length=100, required=False)
+    sector = forms.CharField(max_length=100, required=False)
+    cell = forms.CharField(max_length=100, required=False)
+    village = forms.CharField(max_length=100, required=False)
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'community', 'password1', 'password2']
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'phone',
+            'leader_type', 'province', 'district', 'sector', 'cell',
+            'village', 'password1', 'password2',
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['community'].queryset = Community.objects.filter(
-            leader__isnull=True
-        ).order_by('province', 'district', 'sector', 'cell', 'village')
-        self.fields['community'].label_from_instance = lambda community: community.full_address()
+        self.location_suggestions = {}
+        for field_name in ('district', 'sector', 'cell', 'village'):
+            self.fields[field_name].widget.attrs['list'] = (
+                f'{field_name}-location-options'
+            )
+            self.location_suggestions[field_name] = (
+                Community.objects.exclude(**{f'{field_name}': ''})
+                .values_list(field_name, flat=True)
+                .distinct()
+                .order_by(field_name)
+            )
+        levels = {
+            'province': 1,
+            'district': 2,
+            'sector': 3,
+            'cell': 4,
+            'village': 5,
+        }
+        leader_type = (
+            self.data.get('leader_type')
+            if self.is_bound
+            else self.initial.get('leader_type')
+        )
+        required_through = {
+            'province': 1,
+            'district': 2,
+            'sector': 3,
+            'cell': 4,
+            'village': 5,
+        }.get(leader_type, 0)
+        for field_name, level in levels.items():
+            self.fields[field_name].required = level <= required_through
+            self.fields[field_name].widget.attrs['data-area-level'] = str(level)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        location_fields = ('province', 'district', 'sector', 'cell', 'village')
+        required_through = {
+            'province': 1,
+            'district': 2,
+            'sector': 3,
+            'cell': 4,
+            'village': 5,
+        }.get(cleaned_data.get('leader_type'), 0)
+        prefix = []
+        for level, field_name in enumerate(location_fields, start=1):
+            if level > required_through:
+                break
+            value = cleaned_data.get(field_name)
+            if not value:
+                break
+            if isinstance(value, str):
+                value = value.strip()
+                cleaned_data[field_name] = value
+            prefix.append(value)
+        for field_name in location_fields[len(prefix):]:
+            cleaned_data[field_name] = ''
+        if (
+            cleaned_data.get('leader_type') == 'village'
+            and len(prefix) == len(location_fields)
+            and Community.objects.filter(
+                province=cleaned_data['province'],
+                district=cleaned_data['district'],
+                sector=cleaned_data['sector'],
+                cell=cleaned_data['cell'],
+                village=cleaned_data['village'],
+                leader__isnull=False,
+            ).exists()
+        ):
+            self.add_error(
+                'village',
+                "This village already has a registered leader. Contact an administrator if you need help.",
+            )
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -65,14 +147,20 @@ class LeaderRegisterForm(UserCreationForm):
         user.last_name = self.cleaned_data['last_name']
         if commit:
             user.save()
-            community = self.cleaned_data['community']
-            community.leader = user
-            community.leader_phone = self.cleaned_data['phone']
-            community.save(update_fields=['leader', 'leader_phone'])
+            leader_type = self.cleaned_data['leader_type']
+            location = {
+                field: self.cleaned_data[field]
+                for field in ('province', 'district', 'sector', 'cell', 'village')
+            }
+            community, _ = Community.objects.get_or_create(**location)
             UserProfile.objects.create(
                 user=user,
                 role='leader',
+                leader_type=leader_type,
+                community=community,
+                **location,
                 phone=self.cleaned_data['phone'],
+                is_approved=False,
             )
         return user
 

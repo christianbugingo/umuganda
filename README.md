@@ -20,6 +20,7 @@ The application uses four main models:
 - **Geographic Organization** - Projects grouped by Rwandan provinces for easy discovery
 - **Smart Sign-up System** - Prevents duplicate sign-ups with unique constraints
 - **Volunteer Dashboard** - Personal tracking of sign-up history, attendance, and hours contributed
+- **Leader Accounts** - Village, cell, sector, district, and province leaders can publish projects in the villages within their managed area
 - **Admin Management** - Staff can create projects and mark participant attendance
 - **Community-Based** - Volunteers automatically linked to their village community
 - **Hours Tracking** - Monitor and report volunteer contribution hours
@@ -30,6 +31,7 @@ The system follows Rwanda's official administrative structure:
 - Province (Intara)
 - District (Akarere)
 - Sector (Umurenge)
+- Cell (Akagari)
 - Village (Umudugudu)
 
 ## 🚶‍♂️ User Workflow
@@ -45,6 +47,20 @@ The system follows Rwanda's official administrative structure:
    - Sign-up history
    - Attendance records
    - Total hours contributed
+
+### For Community Leaders
+1. Apply as a village, cell, sector, district, or province leader and enter the location fields up to your leadership level
+2. Wait for an administrator to independently verify and approve the application
+3. After approval, publish projects for your managed area; projects are listed publicly for volunteers to discover and join
+
+Leader applications are not proof of a real-world leadership role. Before approving one in
+the Django admin under **User profiles**, contact the relevant local authority or use an
+official appointment/confirmation record. Verify the person's identity through a trusted
+channel, and avoid collecting or storing identity documents unless the organization has a
+secure, lawful process for handling them. Set **Approved** only after verification; an
+unapproved applicant cannot sign in as a leader or open the leader dashboard.
+Existing leader accounts are left unapproved by the migration and should be verified before
+they regain leader access. Existing volunteer accounts remain usable.
 
 ### For Admins/Staff
 1. Create and manage Umuganda projects

@@ -107,11 +107,11 @@
         <div class="info-card">
             <h3>📍 Location</h3>
             <p><strong>Project location:</strong> {{ project.location }}</p>
-            <p><strong>Village:</strong> {{ project.community.village }}</p>
-            <p><strong>Cell:</strong> {{ project.community.cell }}</p>
-            <p><strong>Sector:</strong> {{ project.community.sector }}</p>
-            <p><strong>District:</strong> {{ project.community.district }}</p>
-            <p><strong>Province:</strong> {{ project.community.get_province_display }}</p>
+            {% if project.community.village %}<p><strong>Village:</strong> {{ project.community.village }}</p>{% endif %}
+            {% if project.community.cell %}<p><strong>Cell:</strong> {{ project.community.cell }}</p>{% endif %}
+            {% if project.community.sector %}<p><strong>Sector:</strong> {{ project.community.sector }}</p>{% endif %}
+            {% if project.community.district %}<p><strong>District:</strong> {{ project.community.district }}</p>{% endif %}
+            {% if project.community.province %}<p><strong>Province:</strong> {{ project.community.get_province_display }}</p>{% endif %}
         </div>
 
         <div class="info-card">

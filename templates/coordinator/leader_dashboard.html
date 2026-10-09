@@ -23,19 +23,19 @@
                     </div>
                 {% endif %}
                 <h2 class="h4">{{ user.get_full_name|default:user.username }}</h2>
-                <span class="badge text-bg-success">Community Leader</span>
+                <span class="badge text-bg-success">{{ profile.get_leader_type_display }}</span>
                 <p class="text-muted mt-3 mb-1"><strong>Email:</strong> {{ user.email }}</p>
                 <p class="text-muted mb-0"><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
             </div>
         </section>
         <section class="card shadow-sm">
             <div class="card-body">
-                <h2 class="h5 text-success">Your community</h2>
-                {% for community in communities %}
-                    <p class="mb-1">{{ community.full_address }}</p>
-                {% empty %}
-                    <p class="text-muted mb-0">No community is assigned to this account.</p>
-                {% endfor %}
+                <h2 class="h5 text-success">Your managed area</h2>
+                {% if managed_area %}
+                    <p class="mb-0">{{ managed_area }}</p>
+                {% else %}
+                    <p class="text-muted mb-0">No area is assigned to this account.</p>
+                {% endif %}
             </div>
         </section>
     </div>
@@ -66,11 +66,26 @@
                     <article class="border rounded p-3 mb-3">
                         <div class="d-flex justify-content-between gap-3">
                             <h3 class="h5">{{ project.title }}</h3>
-                            <span class="badge text-bg-secondary">{{ project.get_status_display }}</span>
+                            {% if project.date < today %}
+                                <span class="badge text-bg-secondary">Past project</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">{{ project.get_status_display }}</span>
+                            {% endif %}
                         </div>
                         <p class="text-muted mb-2">{{ project.date }} · {{ project.community.full_address }}</p>
                         <p class="mb-2">{{ project.description|truncatewords:35 }}</p>
-                        <a href="{% url 'project_detail' project.id %}">View public announcement</a>
+                        {% if project.date >= today %}
+                            <a href="{% url 'project_detail' project.id %}">View public announcement</a>
+                        {% else %}
+                            <p class="text-muted mb-0">This announcement is no longer shown publicly.</p>
+                        {% endif %}
+                        <div class="d-flex gap-2 mt-3">
+                            <a class="btn btn-outline-success btn-sm" href="{% url 'leader_project_edit' project.id %}">Edit project</a>
+                            <form method="post" action="{% url 'leader_project_delete' project.id %}" onsubmit="return confirm('Delete this project announcement? This cannot be undone.');">
+                                {% csrf_token %}
+                                <button class="btn btn-outline-danger btn-sm" type="submit">Delete project</button>
+                            </form>
+                        </div>
                     </article>
                 {% empty %}
                     <p class="text-muted mb-0">You have not posted a project yet.</p>
