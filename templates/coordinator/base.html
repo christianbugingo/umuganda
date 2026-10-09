@@ -23,7 +23,7 @@
         
         /* Navigation */
         .navbar {
-            background: #2E8B57 !important;
+            background: #1c6b41 !important;
             padding: 1rem 2rem;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -78,7 +78,7 @@
         }
         
         .footer h5 {
-            color: #2E8B57;
+            color: #b8e0c2;
             margin-bottom: 1.5rem;
             font-weight: 600;
         }
@@ -99,7 +99,7 @@
         }
         
         .footer-links a:hover {
-            color: #2E8B57;
+            color: #1c6b41;
         }
         
         .footer-bottom {
@@ -134,12 +134,12 @@
         
         .form-control:focus {
             outline: none;
-            border-color: #2E8B57;
+            border-color: #1c6b41;
             box-shadow: 0 0 0 2px rgba(46, 139, 87, 0.2);
         }
         
         .btn {
-            background: #2E8B57;
+            background: #1c6b41;
             color: white;
             padding: 0.75rem 1.5rem;
             border: none;
@@ -160,11 +160,32 @@
         .btn-secondary:hover {
             background: #545b62;
         }
+
+        .skip-link {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2000;
+            padding: .75rem 1rem;
+            transform: translateY(-150%);
+            background: #fff;
+            color: #173d27;
+        }
+
+        .skip-link:focus {
+            transform: translateY(0);
+        }
+
+        :focus-visible {
+            outline: 3px solid #173d27;
+            outline-offset: 3px;
+        }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
         <div class="container-fluid">
             <a href="{% url 'home' %}" class="navbar-brand">
                 <img src="{% static 'coordinator/images/umuganda-logo.svg' %}" alt="">
@@ -216,7 +237,7 @@
     {% if messages %}
         <div class="container">
             {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}" aria-live="{% if message.tags == 'error' %}assertive{% else %}polite{% endif %}">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -225,7 +246,7 @@
     {% endif %}
 
     <!-- Main Content -->
-    <main class="container">
+    <main class="container" id="main-content" tabindex="-1">
         {% block content %}
         <!-- Page content goes here -->
         {% endblock %}
@@ -286,7 +307,7 @@
                         <p>&copy; 2026 Umuganda Community Coordinator. All rights reserved.</p>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <p>developed by <a href="https://www.coodic.org/" target="_blank" style="color: #2E8B57; text-decoration: none;">Coodic</a></p>
+                        <p>developed by <a href="https://www.coodic.org/" target="_blank" rel="noopener noreferrer" style="color: #b8e0c2; text-decoration: none;">Coodic</a></p>
                     </div>
                 </div>
             </div>

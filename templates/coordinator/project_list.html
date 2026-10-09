@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     .header {
-        background: #2E8B57;
+        background: #1c6b41;
         color: white;
         padding: 20px;
         text-align: center;
@@ -16,7 +16,7 @@
         margin-bottom: 20px;
     }
     .back-link a {
-        color: #2E8B57;
+        color: #1c6b41;
         text-decoration: none;
         font-weight: bold;
     }
@@ -28,8 +28,8 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .province-title {
-        color: #2E8B57;
-        border-bottom: 2px solid #2E8B57;
+        color: #1c6b41;
+        border-bottom: 2px solid #1c6b41;
         padding-bottom: 10px;
         margin-top: 0;
     }
@@ -38,10 +38,10 @@
         padding: 15px;
         margin: 10px 0;
         border-radius: 5px;
-        border-left: 4px solid #2E8B57;
+        border-left: 4px solid #1c6b41;
     }
     .project-title {
-        color: #2E8B57;
+        color: #1c6b41;
         margin-top: 0;
     }
     .project-meta {
@@ -53,7 +53,7 @@
         margin-top: 15px;
     }
     .btn {
-        background: #2E8B57;
+        background: #1c6b41;
         color: white;
         padding: 8px 15px;
         border: none;
@@ -85,7 +85,7 @@
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
-        color: #2E8B57;
+        color: #1c6b41;
     }
     .form-control {
         width: 100%;
@@ -96,7 +96,7 @@
     }
     .search-results {
         background: #e8f5e8;
-        color: #2E8B57;
+        color: #1c6b41;
         padding: 10px 15px;
         border-radius: 4px;
         margin-bottom: 20px;
@@ -111,7 +111,7 @@
 
 <!-- Search and Filter Form -->
 <div class="search-container">
-    <form method="GET" class="search-form">
+    <form method="GET" class="search-form" aria-label="Filter community projects">
         <div class="form-group">
             <label for="search">Search Projects</label>
             <input type="text" id="search" name="search" class="form-control"
@@ -198,13 +198,37 @@
 
 <!-- Search Results Info -->
 {% if search_query or province_filter or district_filter or sector_filter or cell_filter or village_filter or date_from or date_to %}
-    <div class="search-results">
+    <div class="search-results" role="status" aria-live="polite">
         <strong>Search Results:</strong> Found {{ total_projects }} project{{ total_projects|pluralize }}
         {% if search_query %} for "{{ search_query }}"{% endif %}
         {% if province_filter %}
             {% for province_code, province_name in available_provinces %}
                 {% if province_code == province_filter %} in {{ province_name }}{% endif %}
             {% endfor %}
+        {% endif %}
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Project result pages" class="mb-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">Previous</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link" aria-current="page">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}" rel="next">Next</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
         {% endif %}
         {% if district_filter %}, {{ district_filter }}{% endif %}
         {% if sector_filter %}, {{ sector_filter }}{% endif %}

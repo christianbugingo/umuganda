@@ -1,15 +1,20 @@
 from datetime import timedelta
+from io import BytesIO
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.utils import timezone
+from PIL import Image
 
 from coordinator.models import (
+    Announcement,
     Community,
     Participation,
     UmugandaProject,
     UserProfile,
     Volunteer,
+    Testimonial,
 )
 
 
@@ -24,6 +29,65 @@ class HomePageTests(TestCase):
         self.assertContains(response, 'data-slideshow')
         self.assertContains(response, 'data-slide-next')
         self.assertContains(response, "coordinator/images/umuganda4.jpg")
+        self.assertContains(response, 'data-first-video="40FMZIaGR-k"')
+        self.assertContains(response, 'data-second-video="5FVO3IHwIzw"')
+        self.assertContains(response, 'referrerpolicy="origin"')
+        self.assertContains(response, "height: clamp(210px, 30vh, 320px)")
+        self.assertContains(response, "width: max(100vw, calc(clamp(210px, 30vh, 320px) * 16 / 9))")
+        self.assertContains(response, "enablejsapi: \"1\"")
+        self.assertContains(response, "origin: window.location.origin")
+        self.assertContains(response, "event.target.mute()")
+        self.assertContains(response, "event.target.loadVideoById(secondVideo)")
+        self.assertNotContains(response, "Watch on YouTube")
+        self.assertNotContains(response, "Video 1")
+        self.assertNotContains(response, "Video 2")
+        self.assertNotContains(response, "data-video-id=")
+
+    def test_homepage_randomly_selects_only_active_announcements_and_consented_testimonials(self):
+        leader = User.objects.create_user(
+            username="homeleader",
+            password="StrongPass123!",
+        )
+        announcements = [
+            Announcement.objects.create(
+                title=f"Notice {index}",
+                body="A local update.",
+                created_by=leader,
+            )
+            for index in range(5)
+        ]
+        Announcement.objects.create(
+            title="Expired notice",
+            body="This is out of date.",
+            created_by=leader,
+            expires_at=timezone.localdate() - timedelta(days=1),
+        )
+        testimonials = [
+            Testimonial.objects.create(
+                quote=f"Community story {index}",
+                attribution=f"Volunteer {index}",
+                consent_confirmed=True,
+                is_published=True,
+            )
+            for index in range(4)
+        ]
+        Testimonial.objects.create(
+            quote="Not approved for publication",
+            attribution="Private volunteer",
+            consent_confirmed=False,
+            is_published=True,
+        )
+
+        response = self.client.get("/")
+
+        shown_announcements = list(response.context["announcements"])
+        shown_testimonials = list(response.context["testimonials"])
+        self.assertEqual(len(shown_announcements), 3)
+        self.assertTrue(set(shown_announcements).issubset(set(announcements)))
+        self.assertEqual(len(shown_testimonials), 3)
+        self.assertTrue(set(shown_testimonials).issubset(set(testimonials)))
+        self.assertContains(response, "Community announcements")
+        self.assertContains(response, "Community stories")
 
 
 class ProjectPageTests(TestCase):
@@ -59,6 +123,32 @@ class ProjectPageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Neighborhood Clean-up")
         self.assertContains(response, "Gisozi Park")
+
+    def test_project_list_paginates_results_and_preserves_filters(self):
+        for index in range(12):
+            UmugandaProject.objects.create(
+                title=f"Additional project {index}",
+                description="A community project.",
+                location="Gisozi",
+                date="2026-10-16",
+                start_time="08:00",
+                end_time="10:00",
+                community=self.community,
+                needed_volunteers=10,
+                created_by=self.user,
+            )
+
+        first_page = self.client.get("/projects/", {"district": "Gasabo"})
+        second_page = self.client.get(
+            "/projects/",
+            {"district": "Gasabo", "page": "2"},
+        )
+
+        self.assertEqual(first_page.context["total_projects"], 13)
+        self.assertEqual(len(first_page.context["page_obj"].object_list), 12)
+        self.assertTrue(first_page.context["page_obj"].has_next())
+        self.assertEqual(len(second_page.context["page_obj"].object_list), 1)
+        self.assertContains(first_page, "district=Gasabo&amp;page=2")
 
     def test_past_projects_disappear_from_public_pages_and_cannot_be_joined(self):
         self.project.date = timezone.localdate() - timedelta(days=1)
@@ -458,6 +548,116 @@ class RegistrationTests(TestCase):
         self.assertTrue(UmugandaProject.objects.filter(pk=project.pk).exists())
 
 
+class LeaderAnnouncementTests(TestCase):
+    def setUp(self):
+        self.leader = User.objects.create_user(
+            username="announcementleader",
+            password="StrongPass123!",
+        )
+        self.other_leader = User.objects.create_user(
+            username="anotherleader",
+            password="StrongPass123!",
+        )
+        community = Community.objects.create(
+            province="kigali",
+            district="Gasabo",
+            sector="Kacyiru",
+            cell="Kagugu",
+            village="Kibagabaga",
+        )
+        for user in (self.leader, self.other_leader):
+            UserProfile.objects.create(
+                user=user,
+                role="leader",
+                leader_type="district",
+                community=community,
+                is_approved=True,
+            )
+
+    def test_approved_leader_can_publish_edit_and_delete_announcement(self):
+        self.client.force_login(self.leader)
+        dashboard = self.client.get("/dashboard/leader/")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertContains(dashboard, "Share a community announcement")
+        create_response = self.client.post(
+            "/dashboard/leader/announcements/new/",
+            {
+                "title": "Community meeting",
+                "category": "notice",
+                "body": "Residents are invited to the monthly meeting.",
+                "area": "Gasabo",
+                "expires_at": "",
+            },
+        )
+
+        self.assertRedirects(create_response, "/dashboard/leader/")
+        announcement = Announcement.objects.get(title="Community meeting")
+        self.assertEqual(announcement.created_by, self.leader)
+        self.assertContains(self.client.get("/"), "Community meeting")
+
+        update_response = self.client.post(
+            f"/dashboard/leader/announcements/{announcement.pk}/edit/",
+            {
+                "title": "Updated community meeting",
+                "category": "community",
+                "body": "The meeting starts at 9 AM.",
+                "area": "Kacyiru",
+                "expires_at": "",
+            },
+        )
+        self.assertRedirects(update_response, "/dashboard/leader/")
+        announcement.refresh_from_db()
+        self.assertEqual(announcement.title, "Updated community meeting")
+        self.assertEqual(announcement.area, "Kacyiru")
+
+        delete_response = self.client.post(
+            f"/dashboard/leader/announcements/{announcement.pk}/delete/"
+        )
+        self.assertRedirects(delete_response, "/dashboard/leader/")
+        self.assertFalse(Announcement.objects.filter(pk=announcement.pk).exists())
+
+    def test_leader_cannot_manage_other_leaders_announcements(self):
+        announcement = Announcement.objects.create(
+            title="Owner notice",
+            body="An owner's announcement.",
+            created_by=self.leader,
+        )
+        self.client.force_login(self.other_leader)
+
+        edit_response = self.client.get(
+            f"/dashboard/leader/announcements/{announcement.pk}/edit/"
+        )
+        delete_response = self.client.post(
+            f"/dashboard/leader/announcements/{announcement.pk}/delete/"
+        )
+
+        self.assertEqual(edit_response.status_code, 404)
+        self.assertEqual(delete_response.status_code, 404)
+        self.assertTrue(Announcement.objects.filter(pk=announcement.pk).exists())
+
+    def test_only_approved_leaders_can_publish_announcements(self):
+        profile = UserProfile.objects.get(user=self.leader)
+        profile.is_approved = False
+        profile.save(update_fields=["is_approved"])
+        self.client.force_login(self.leader)
+
+        response = self.client.post(
+            "/dashboard/leader/announcements/new/",
+            {
+                "title": "Unapproved notice",
+                "category": "notice",
+                "body": "This should not publish.",
+                "area": "Gasabo",
+                "expires_at": "",
+            },
+        )
+
+        self.assertRedirects(response, "/")
+        self.assertFalse(
+            Announcement.objects.filter(title="Unapproved notice").exists()
+        )
+
+
 class AdminAccountEditingTests(TestCase):
     def test_admin_can_open_user_editor_from_volunteer_and_profile_records(self):
         admin_user = User.objects.create_superuser(
@@ -491,3 +691,66 @@ class AdminAccountEditingTests(TestCase):
         self.assertContains(user_edit, 'name="email"')
         self.assertContains(user_edit, 'name="userprofile-0-phone"')
         self.assertContains(user_edit, 'name="volunteer-0-phone"')
+        self.assertEqual(
+            self.client.get("/admin/coordinator/announcement/").status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get("/admin/coordinator/testimonial/").status_code,
+            200,
+        )
+
+
+class ProfilePhotoTests(TestCase):
+    def test_uploaded_profile_photo_is_saved_and_served_locally(self):
+        user = User.objects.create_user(
+            username="photovolunteer",
+            password="StrongPass123!",
+        )
+        self.client.force_login(user)
+        image_bytes = BytesIO()
+        Image.new("RGB", (8, 8), color="green").save(image_bytes, format="PNG")
+        upload = SimpleUploadedFile(
+            "profile.png",
+            image_bytes.getvalue(),
+            content_type="image/png",
+        )
+
+        response = self.client.post("/profile/edit/", {
+            "first_name": "Photo",
+            "last_name": "Volunteer",
+            "email": "photo@example.com",
+            "phone": "123",
+            "photo": upload,
+        })
+
+        self.assertRedirects(
+            response,
+            "/dashboard/",
+            fetch_redirect_response=False,
+        )
+        profile = UserProfile.objects.get(user=user)
+        try:
+            self.assertTrue(profile.photo.name)
+            self.assertTrue(profile.photo.storage.exists(profile.photo.name))
+            self.assertTrue(profile.photo.url.startswith("/media/"))
+        finally:
+            profile.photo.delete(save=False)
+
+
+class AccessibilityTests(TestCase):
+    def test_base_page_has_skip_link_and_homepage_slideshow_controls(self):
+        response = self.client.get("/")
+
+        self.assertContains(response, 'href="#main-content"')
+        self.assertContains(response, 'id="main-content"')
+        self.assertContains(response, 'data-slide-toggle')
+        self.assertContains(response, 'type="image/webp"')
+
+    def test_leader_signup_field_errors_are_linked_to_invalid_inputs(self):
+        response = self.client.post("/leaders/register/", {})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'aria-invalid="true"')
+        self.assertContains(response, 'id="id_username_error"')
+        self.assertContains(response, 'href="#id_username"')

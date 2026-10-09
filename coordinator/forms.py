@@ -1,9 +1,40 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .models import Community, UserProfile, Volunteer, UmugandaProject
+from .models import (
+    Announcement,
+    Community,
+    UserProfile,
+    Volunteer,
+    UmugandaProject,
+)
 
-class RegisterForm(UserCreationForm):
+
+class AccessibleFormMixin:
+    def _set_accessible_attributes(self):
+        for name, field in self.fields.items():
+            attrs = field.widget.attrs
+            description_ids = []
+            if field.help_text:
+                description_ids.append(f'id_{name}_helptext')
+            if self.is_bound and name in self.errors:
+                description_ids.append(f'id_{name}_error')
+                attrs['aria-invalid'] = 'true'
+            else:
+                attrs.pop('aria-invalid', None)
+            if description_ids:
+                attrs['aria-describedby'] = ' '.join(description_ids)
+
+    def full_clean(self):
+        super().full_clean()
+        self._set_accessible_attributes()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_accessible_attributes()
+
+
+class RegisterForm(AccessibleFormMixin, UserCreationForm):
     email = forms.EmailField(required=True)
     phone = forms.CharField(max_length=15, required=True)
     
@@ -29,7 +60,7 @@ class RegisterForm(UserCreationForm):
             )
         return user
 
-class LoginForm(AuthenticationForm):
+class LoginForm(AccessibleFormMixin, AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Username'
@@ -40,7 +71,7 @@ class LoginForm(AuthenticationForm):
     }))
 
 
-class LeaderRegisterForm(UserCreationForm):
+class LeaderRegisterForm(AccessibleFormMixin, UserCreationForm):
     email = forms.EmailField(required=True)
     phone = forms.CharField(max_length=15, required=True)
     leader_type = forms.ChoiceField(
@@ -165,7 +196,7 @@ class LeaderRegisterForm(UserCreationForm):
         return user
 
 
-class ProjectForm(forms.ModelForm):
+class ProjectForm(AccessibleFormMixin, forms.ModelForm):
     class Meta:
         model = UmugandaProject
         fields = [
@@ -183,14 +214,32 @@ class ProjectForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['community'].queryset = communities
         self.fields['community'].label_from_instance = lambda community: community.full_address()
+        self._set_accessible_attributes()
 
 
-class ProfileEditForm(forms.Form):
+class AnnouncementForm(AccessibleFormMixin, forms.ModelForm):
+    class Meta:
+        model = Announcement
+        fields = ('title', 'category', 'body', 'area', 'expires_at')
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 5}),
+            'expires_at': forms.DateInput(attrs={'type': 'date'}),
+        }
+        help_texts = {
+            'area': 'Optional. For example, your district, sector, or village.',
+            'expires_at': 'Optional. Leave blank to keep this announcement visible.',
+        }
+
+
+class ProfileEditForm(AccessibleFormMixin, forms.Form):
     first_name = forms.CharField(max_length=150, required=False)
     last_name = forms.CharField(max_length=150, required=False)
     email = forms.EmailField()
     phone = forms.CharField(max_length=15, required=False)
-    photo = forms.ImageField(required=False)
+    photo = forms.ImageField(
+        required=False,
+        help_text='Upload a JPG, PNG, or GIF image (maximum 5 MB).',
+    )
 
     def __init__(self, *args, user, profile, **kwargs):
         super().__init__(*args, **kwargs)
@@ -203,6 +252,12 @@ class ProfileEditForm(forms.Form):
                 'email': user.email,
                 'phone': profile.phone,
             })
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and photo.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('Choose an image smaller than 5 MB.')
+        return photo
 
     def save(self):
         self.user.first_name = self.cleaned_data['first_name']

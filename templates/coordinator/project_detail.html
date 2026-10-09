@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     .header {
-        background: #2E8B57;
+        background: #1c6b41;
         color: white;
         padding: 20px;
         border-radius: 5px;
@@ -15,7 +15,7 @@
         margin-bottom: 20px;
     }
     .back-link a {
-        color: #2E8B57;
+        color: #1c6b41;
         text-decoration: none;
         font-weight: bold;
     }
@@ -35,14 +35,14 @@
         background: #f9f9f9;
         padding: 15px;
         border-radius: 5px;
-        border-left: 4px solid #2E8B57;
+        border-left: 4px solid #1c6b41;
     }
     .info-card h3 {
         margin-top: 0;
-        color: #2E8B57;
+        color: #1c6b41;
     }
     .btn {
-        background: #2E8B57;
+        background: #1c6b41;
         color: white;
         padding: 12px 25px;
         border: none;
@@ -120,7 +120,7 @@
             <p><strong>Volunteers needed:</strong> {{ project.needed_volunteers }}</p>
             <p><strong>Already signed up:</strong> {{ current_participants }}</p>
             <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; margin-top: 10px;">
-                <div style="background: #2E8B57; height: 100%; width: {% widthratio current_participants project.needed_volunteers 100 %}%; border-radius: 5px;"></div>
+                <div style="background: #1c6b41; height: 100%; width: {% widthratio current_participants project.needed_volunteers 100 %}%; border-radius: 5px;"></div>
             </div>
             <small>{{ current_participants }} of {{ project.needed_volunteers }} volunteers</small>
         </div>

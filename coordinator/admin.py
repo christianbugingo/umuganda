@@ -4,11 +4,13 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import (
+    Announcement,
     Community,
     Participation,
     UmugandaProject,
     UserProfile,
     Volunteer,
+    Testimonial,
 )
 
 class CommunityAdmin(admin.ModelAdmin):
@@ -116,13 +118,28 @@ class UserAdmin(DjangoUserAdmin):
         return format_html('<a class="button" href="{}">Update</a>', url)
 
 
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'area', 'created_by', 'created_at', 'expires_at', 'is_published')
+    list_filter = ('category', 'is_published', 'created_at')
+    search_fields = ('title', 'body', 'area', 'created_by__username')
+    readonly_fields = ('created_at',)
+
+
+class TestimonialAdmin(admin.ModelAdmin):
+    list_display = ('attribution', 'role', 'consent_confirmed', 'is_published', 'created_at')
+    list_filter = ('consent_confirmed', 'is_published')
+    search_fields = ('quote', 'attribution', 'role')
+    readonly_fields = ('created_at',)
+
+
 admin.site.register(Community, CommunityAdmin)
 admin.site.register(UmugandaProject, UmugandaProjectAdmin)
 admin.site.register(Volunteer, VolunteerAdmin)
 admin.site.register(Participation, ParticipationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Announcement, AnnouncementAdmin)
+admin.site.register(Testimonial, TestimonialAdmin)
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-
 
 

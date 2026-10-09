@@ -20,6 +20,21 @@ urlpatterns = [
         views.leader_project_delete,
         name='leader_project_delete',
     ),
+    path(
+        'dashboard/leader/announcements/new/',
+        views.leader_announcement_create,
+        name='leader_announcement_create',
+    ),
+    path(
+        'dashboard/leader/announcements/<int:announcement_id>/edit/',
+        views.leader_announcement_edit,
+        name='leader_announcement_edit',
+    ),
+    path(
+        'dashboard/leader/announcements/<int:announcement_id>/delete/',
+        views.leader_announcement_delete,
+        name='leader_announcement_delete',
+    ),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('login/', views.user_login, name='login'),
     path('leaders/register/', views.leader_register, name='leader_register'),

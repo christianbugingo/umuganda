@@ -1,12 +1,16 @@
+import random
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth import logout
 from django.db.models import Q
+from django.core.paginator import Paginator
 from django.utils import timezone
 from functools import wraps
 from coordinator.forms import (
+    AnnouncementForm,
     LeaderRegisterForm,
     LoginForm,
     ProfileEditForm,
@@ -18,15 +22,43 @@ from coordinator.forms import (
 
 
 from coordinator.models import (
+    Announcement,
     Community,
     Participation,
     UmugandaProject,
     UserProfile,
     Volunteer,
+    Testimonial,
 )
 
+
+HOMEPAGE_VIDEOS = (
+    '40FMZIaGR-k',
+    '5FVO3IHwIzw',
+)
+
+
 def home(request):
-    return render(request, 'coordinator/home.html')
+    today = timezone.localdate()
+    announcements = list(
+        Announcement.objects.filter(is_published=True)
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gte=today))
+        .select_related('created_by')
+        .order_by('-created_at', '-id')[:20]
+    )
+    testimonials = list(
+        Testimonial.objects.filter(
+            is_published=True,
+            consent_confirmed=True,
+        ).order_by('-created_at', '-id')[:20]
+    )
+    random.shuffle(announcements)
+    random.shuffle(testimonials)
+    return render(request, 'coordinator/home.html', {
+        'announcements': announcements[:3],
+        'testimonials': testimonials[:3],
+        'homepage_videos': HOMEPAGE_VIDEOS,
+    })
 
 
 
@@ -46,7 +78,7 @@ def project_list(request):
     projects = UmugandaProject.objects.filter(
         status='planned',
         date__gte=timezone.localdate(),
-    ).select_related('community').order_by('date')
+    ).select_related('community').order_by('date', 'id')
 
     # Apply search filter
     if search_query:
@@ -96,9 +128,12 @@ def project_list(request):
     if cell_filter:
         villages = villages.filter(cell=cell_filter)
 
-    # Group by province for better organization
+    paginator = Paginator(projects, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Group the current page by province for better organization.
     projects_by_province = {}
-    for project in projects:
+    for project in page_obj.object_list:
         province = project.community.get_province_display()
         if province not in projects_by_province:
             projects_by_province[province] = []
@@ -106,7 +141,9 @@ def project_list(request):
 
     context = {
         'projects_by_province': projects_by_province,
-        'total_projects': projects.count(),
+        'total_projects': paginator.count,
+        'page_obj': page_obj,
+        'pagination_query': request.GET.copy(),
         'search_query': search_query,
         'province_filter': province_filter,
         'district_filter': district_filter,
@@ -121,6 +158,8 @@ def project_list(request):
         'available_cells': cells.exclude(cell='').values_list('cell', flat=True).distinct().order_by('cell'),
         'available_villages': villages.exclude(village='').values_list('village', flat=True).distinct().order_by('village'),
     }
+    context['pagination_query'].pop('page', None)
+    context['pagination_query'] = context['pagination_query'].urlencode()
     return render(request, 'coordinator/project_list.html', context)
 
 def project_detail(request, project_id):
@@ -412,14 +451,87 @@ def leader_dashboard(request):
     projects = UmugandaProject.objects.filter(
         created_by=request.user
     ).select_related('community').order_by('-created_at')
+    announcements = Announcement.objects.filter(
+        created_by=request.user,
+    ).order_by('-created_at')
     return render(request, 'coordinator/leader_dashboard.html', {
         'profile': profile,
         'communities': communities,
         'managed_area': profile.managed_area_label(),
         'project_form': form,
         'projects': projects,
+        'announcement_form': AnnouncementForm(
+            initial={'area': profile.managed_area_label()}
+        ),
+        'announcements': announcements,
         'today': timezone.localdate(),
     })
+
+
+@role_required('leader')
+def leader_announcement_create(request):
+    if request.method != 'POST':
+        return redirect('leader_dashboard')
+    form = AnnouncementForm(request.POST)
+    if form.is_valid():
+        announcement = form.save(commit=False)
+        announcement.created_by = request.user
+        announcement.save()
+        messages.success(request, "Your community announcement has been published.")
+        return redirect('leader_dashboard')
+
+    profile = _profile_for(request.user)
+    communities = profile.managed_communities()
+    projects = UmugandaProject.objects.filter(
+        created_by=request.user,
+    ).select_related('community').order_by('-created_at')
+    return render(request, 'coordinator/leader_dashboard.html', {
+        'profile': profile,
+        'communities': communities,
+        'managed_area': profile.managed_area_label(),
+        'project_form': ProjectForm(communities=communities),
+        'projects': projects,
+        'announcement_form': form,
+        'announcements': Announcement.objects.filter(
+            created_by=request.user,
+        ).order_by('-created_at'),
+        'today': timezone.localdate(),
+    })
+
+
+@role_required('leader')
+def leader_announcement_edit(request, announcement_id):
+    announcement = get_object_or_404(
+        Announcement,
+        pk=announcement_id,
+        created_by=request.user,
+    )
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST, instance=announcement)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your community announcement has been updated.")
+            return redirect('leader_dashboard')
+    else:
+        form = AnnouncementForm(instance=announcement)
+    return render(request, 'coordinator/leader_announcement_form.html', {
+        'form': form,
+        'announcement': announcement,
+    })
+
+
+@role_required('leader')
+def leader_announcement_delete(request, announcement_id):
+    if request.method != 'POST':
+        return redirect('leader_dashboard')
+    announcement = get_object_or_404(
+        Announcement,
+        pk=announcement_id,
+        created_by=request.user,
+    )
+    announcement.delete()
+    messages.success(request, "Your community announcement has been deleted.")
+    return redirect('leader_dashboard')
 
 
 @role_required('leader')

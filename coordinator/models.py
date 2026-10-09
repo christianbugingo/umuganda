@@ -84,6 +84,66 @@ class UmugandaProject(models.Model):
             return False
 
 
+class Announcement(models.Model):
+    CATEGORY_CHOICES = [
+        ('community', 'Community update'),
+        ('notice', 'Important notice'),
+        ('opportunity', 'Volunteer opportunity'),
+        ('other', 'Other'),
+    ]
+
+    title = models.CharField(max_length=160)
+    body = models.TextField()
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default='community',
+    )
+    area = models.CharField(max_length=255, blank=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='community_announcements',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Optional. The announcement stops appearing after this date.",
+    )
+    is_published = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+        indexes = [
+            models.Index(fields=('is_published', '-created_at')),
+            models.Index(fields=('expires_at',)),
+        ]
+        verbose_name = 'community announcement'
+        verbose_name_plural = 'community announcements'
+
+    def __str__(self):
+        return self.title
+
+
+class Testimonial(models.Model):
+    quote = models.TextField()
+    attribution = models.CharField(max_length=120)
+    role = models.CharField(max_length=120, blank=True)
+    consent_confirmed = models.BooleanField(
+        default=False,
+        help_text="Confirm the person agreed to have this testimonial published.",
+    )
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+
+    def __str__(self):
+        return self.attribution
+
+
 class Volunteer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True)

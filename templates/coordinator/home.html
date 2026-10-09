@@ -38,7 +38,7 @@
         width: 9px;
         height: 9px;
         border-radius: 50%;
-        background: #2e8b57;
+        background: #1c6b41;
         content: "";
     }
     .home-hero h1 {
@@ -157,6 +157,15 @@
         color: #246d40;
         cursor: pointer;
     }
+    .home-slide-toggle {
+        min-height: 2.45rem;
+        padding: .35rem .7rem;
+        border: 1px solid #cbded0;
+        border-radius: 999px;
+        background: #fff;
+        color: #173d27;
+        cursor: pointer;
+    }
     .home-slide-dots button { width: 1.6rem; height: 1.6rem; }
     .home-slide-dots button[aria-current="true"] { border-color: #247344; background: #247344; }
     .home-slide-arrows { display: flex; gap: .45rem; }
@@ -171,6 +180,38 @@
         transition: transform .2s ease, box-shadow .2s ease;
     }
     .features .feature:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(27, 75, 44, .1); }
+    .home-section { margin: 2rem 0; padding: clamp(1.4rem, 3vw, 2.5rem); border: 1px solid #e1ebe3; border-radius: 20px; background: #fff; }
+    .home-section > h2 { color: #1c6b41; font-family: Georgia, "Times New Roman", serif; }
+    .announcement-grid, .testimonial-grid, .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem; }
+    .announcement-card { padding: 1.25rem; border: 1px solid #d6e6dd; border-top: 4px solid #1c6b41; border-radius: 12px; background: linear-gradient(160deg, #f8fcf9, #fff); }
+    .announcement-card[data-category="notice"] { border-top-color: #9a4c00; }
+    .announcement-card[data-category="opportunity"] { border-top-color: #175f86; }
+    .announcement-card h3 { color: #173d27; }
+    .testimonial-card { padding: 1.4rem; border-radius: 14px; background: #f4f8f5; }
+    .testimonial-card blockquote { margin: 0 0 1rem; color: #24392c; font-family: Georgia, "Times New Roman", serif; font-size: 1.12rem; line-height: 1.7; }
+    .how-card { padding: 1.2rem; border: 1px solid #e1ebe3; border-radius: 12px; }
+    .how-card h3 { color: #1c6b41; }
+    .home-cta { padding: clamp(1.7rem, 4vw, 3rem); border-radius: 18px; background: #173d27; color: white; text-align: center; }
+    .home-cta h2 { color: #fff; }
+    .home-cta p { max-width: 55rem; margin: 0 auto 1.4rem; color: #e1f1e5; }
+    .home-cta a { margin: .25rem; }
+    .home-video {
+        position: relative;
+        overflow: hidden;
+        width: 100vw;
+        height: clamp(210px, 30vh, 320px);
+        margin: -2rem 0 2rem calc(50% - 50vw);
+        background: #173d27 url("{% static 'coordinator/images/umuganda1.webp' %}") center 45% / cover no-repeat;
+    }
+    .home-video iframe {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100vw, calc(clamp(210px, 30vh, 320px) * 16 / 9));
+        height: max(clamp(210px, 30vh, 320px), calc(100vw * 9 / 16));
+        border: 0;
+        transform: translate(-50%, -50%);
+    }
     @media (max-width: 760px) {
         .home-hero { grid-template-columns: 1fr; gap: 2rem; padding: 2rem 1.35rem; }
         .home-hero h1 { font-size: clamp(2.5rem, 12vw, 3.7rem); }
@@ -184,6 +225,20 @@
     }
 </style>
 
+<section class="home-video" data-home-video data-first-video="{{ homepage_videos.0 }}" data-second-video="{{ homepage_videos.1 }}" aria-label="Community video">
+    <iframe
+        class="home-video-player"
+        data-video-player
+        title="Decorative community video"
+        src="about:blank"
+        loading="eager"
+        tabindex="-1"
+        aria-hidden="true"
+        referrerpolicy="origin"
+        allow="autoplay; encrypted-media">
+    </iframe>
+</section>
+
 <section class="home-hero" aria-label="Umuganda community work">
     <div class="home-hero-copy">
         <div class="home-date">{% now "l, F j, Y" %}</div>
@@ -191,25 +246,38 @@
         <p>Bring neighbors together to care for our communities. Discover local projects, lend a hand, and help Rwanda thrive.</p>
         <a class="home-hero-link" href="{% url 'project_list' %}">Explore community projects <span aria-hidden="true">→</span></a>
     </div>
-    <div class="home-slideshow" data-slideshow aria-label="Community project highlights">
-        <figure class="home-slide is-active">
-            <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Neighbors working together to improve a community pathway">
+    <div class="home-slideshow" data-slideshow role="region" aria-roledescription="carousel" aria-label="Community project highlights">
+        <figure class="home-slide is-active" role="group" aria-roledescription="slide" aria-label="1 of 4">
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Neighbors working together to improve a community pathway" width="1024" height="683" fetchpriority="high" decoding="async">
+            </picture>
             <figcaption class="home-slide-caption"><span>Working together</span><strong>Cleaner paths, closer communities</strong></figcaption>
         </figure>
-        <figure class="home-slide">
-            <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="Community members joining efforts on a local project">
+        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="2 of 4" aria-hidden="true">
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda2.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="Community members joining efforts on a local project" width="1280" height="720" loading="lazy" decoding="async">
+            </picture>
             <figcaption class="home-slide-caption"><span>Building together</span><strong>Every helping hand makes a difference</strong></figcaption>
         </figure>
-        <figure class="home-slide">
-            <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers improving shared neighborhood spaces">
+        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="3 of 4" aria-hidden="true">
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda3.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers improving shared neighborhood spaces" width="800" height="533" loading="lazy" decoding="async">
+            </picture>
             <figcaption class="home-slide-caption"><span>Growing together</span><strong>Shared work, lasting impact</strong></figcaption>
         </figure>
-        <figure class="home-slide">
-            <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Volunteers planting trees in their community">
+        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="4 of 4" aria-hidden="true">
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda4.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Volunteers planting trees in their community" width="799" height="533" loading="lazy" decoding="async">
+            </picture>
             <figcaption class="home-slide-caption"><span>Greener together</span><strong>Planting a better future</strong></figcaption>
         </figure>
         <div class="home-slide-controls">
-            <div class="home-slide-dots" aria-label="Choose a featured image">
+            <button type="button" class="home-slide-toggle" aria-label="Pause slideshow" aria-pressed="false" data-slide-toggle>Pause</button>
+            <div class="home-slide-dots" role="group" aria-label="Choose a featured image">
                 <button type="button" aria-label="Show image 1" aria-current="true" data-slide-to="0"></button>
                 <button type="button" aria-label="Show image 2" aria-current="false" data-slide-to="1"></button>
                 <button type="button" aria-label="Show image 3" aria-current="false" data-slide-to="2"></button>
@@ -223,68 +291,168 @@
     </div>
 </section>
 
+<section class="home-section" aria-labelledby="announcements-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <p class="text-uppercase fw-bold small mb-1" style="color: #1c6b41; letter-spacing: .08em;">From communities across Rwanda</p>
+            <h2 id="announcements-heading" class="mb-1">Community announcements</h2>
+            <p class="text-muted mb-0">Notices, local updates, and opportunities shared by approved community leaders.</p>
+        </div>
+        <a href="{% url 'leader_login' %}" class="btn btn-outline-success">Leader? Share an update</a>
+    </div>
+    {% if announcements %}
+        <div class="announcement-grid">
+            {% for announcement in announcements %}
+                <article class="announcement-card" data-category="{{ announcement.category }}">
+                    <div class="d-flex justify-content-between gap-2 align-items-start">
+                        <h3 class="h5 mb-0">{{ announcement.title }}</h3>
+                        <span class="badge {% if announcement.category == 'notice' %}text-bg-warning{% elif announcement.category == 'opportunity' %}text-bg-primary{% else %}text-bg-success{% endif %}">{{ announcement.get_category_display }}</span>
+                    </div>
+                    {% if announcement.area %}<p class="small text-muted mt-2 mb-2">{{ announcement.area }}</p>{% endif %}
+                    <p class="mt-2 mb-3">{{ announcement.body|truncatewords:55|linebreaksbr }}</p>
+                    <p class="small text-muted mb-0">Shared by {{ announcement.created_by.get_full_name|default:announcement.created_by.username }} · {{ announcement.created_at|date:"M j, Y" }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="rounded p-4 text-center" style="background: #f4f8f5;">
+            <h3 class="h5">Local updates will appear here</h3>
+            <p class="text-muted mb-0">Approved community leaders can share notices and opportunities from their dashboards.</p>
+        </div>
+    {% endif %}
+</section>
+
 <div class="content" style="background: white; padding: 2rem; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 style="color: #2E8B57; margin-bottom: 1rem;">Welcome to the Umuganda Platform</h2>
+    <h2 style="color: #1c6b41; margin-bottom: 1rem;">Welcome to the Umuganda Platform</h2>
     <p style="margin-bottom: 2rem;">This platform helps Rwandan communities organize their monthly Umuganda activities efficiently.</p>
     
-    <div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
-            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">📋 Project Tracking</h3>
+    <div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.5rem; margin: 2rem 0;">
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
+            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">📋 Project Tracking</h3>
             <p>Plan and monitor community projects from start to finish.</p>
         </div>
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
-            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">👥 Volunteer Sign-ups</h3>
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
+            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">👥 Volunteer Sign-ups</h3>
             <p>Community members can easily sign up for projects.</p>
         </div>
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #2E8B57;">
-            <h3 style="color: #2E8B57; margin-bottom: 0.5rem;">🏆 Achievements</h3>
-            <p>Recognize active volunteers with badges and awards.</p>
+        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
+            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">📣 Community updates</h3>
+            <p>Read local notices, opportunities, and updates shared separately from project listings.</p>
         </div>
     </div>
 
+    <section class="home-section" aria-labelledby="how-it-works-heading">
+        <h2 id="how-it-works-heading">A simple way to work together</h2>
+        <p class="text-muted">The platform connects residents who want to help with the local leaders organizing community work. It brings project information into one place, while keeping announcements distinct from volunteer sign-ups.</p>
+        <div class="how-grid mt-4">
+            <article class="how-card">
+                <h3 class="h5">1. Find work nearby</h3>
+                <p class="mb-0">Browse upcoming projects and narrow results by province, district, sector, cell, village, or date. Project details include the purpose, time, location, and number of volunteers needed.</p>
+            </article>
+            <article class="how-card">
+                <h3 class="h5">2. Join as a volunteer</h3>
+                <p class="mb-0">Create a volunteer account, choose a project, and sign up. Your dashboard keeps your registrations and attendance history together.</p>
+            </article>
+            <article class="how-card">
+                <h3 class="h5">3. Coordinate local work</h3>
+                <p class="mb-0">Approved leaders can publish and update projects for their managed area, and share separate community notices or opportunities with residents.</p>
+            </article>
+            <article class="how-card">
+                <h3 class="h5">4. Keep information current</h3>
+                <p class="mb-0">Leaders can correct or remove their own project details and announcements. Past projects stop appearing in public project listings.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="home-section" aria-labelledby="platform-purpose-heading">
+        <h2 id="platform-purpose-heading">Built around Rwanda’s community structure</h2>
+        <p>Umuganda is shared community work: people contribute time and effort to improve the places where they live. This platform supports that tradition with a clear place to discover activities, coordinate participation, and communicate local information.</p>
+        <p>Location filters follow the administrative hierarchy—province, district, sector, cell, and village—so residents can look for activities close to home. Leaders describe the area they manage when applying; an administrator must verify and approve leader accounts before they can publish.</p>
+        <p class="mb-0">The platform helps organize information, but it does not replace local authorities or verify real-world appointments automatically. Community leaders remain responsible for keeping the information they publish accurate and current.</p>
+    </section>
+
     <!-- Photo Gallery -->
     <div style="margin: 2rem 0;">
-        <h2 style="color: #2E8B57; margin-bottom: 1rem; text-align: center;">See Umuganda in Action</h2>
+        <h2 style="color: #1c6b41; margin-bottom: 1rem; text-align: center;">See Umuganda in Action</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
             <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Community building a wall" style="width: 100%; height: 180px; object-fit: cover;">
+                <picture>
+                    <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
+                    <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Community building a wall" width="1024" height="683" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
+                </picture>
                 <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Pathway Cleanup</h4>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Pathway Cleanup</h4>
                     <p style="margin: 0; font-size: 0.9rem; color: #444;">A cleanup day in a rural sector, improving access for everyone</p>
                 </div>
             </div>
             <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="People planting trees" style="width: 100%; height: 180px; object-fit: cover;">
+                <picture>
+                    <source srcset="{% static 'coordinator/images/umuganda2.webp' %}" type="image/webp">
+                    <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="People planting trees" width="1280" height="720" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
+                </picture>
                 <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Building Together</h4>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Building Together</h4>
                     <p style="margin: 0; font-size: 0.9rem; color: #444;">HE Paul Kagame with Volunteers working together to build a community shelter in Kigali.</p>
                 </div>
             </div>
             <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers clearing a path" style="width: 100%; height: 180px; object-fit: cover;">
+                <picture>
+                    <source srcset="{% static 'coordinator/images/umuganda3.webp' %}" type="image/webp">
+                    <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers clearing a path" width="800" height="533" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
+                </picture>
                 <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Green Community</h4>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Green Community</h4>
                     <p style="margin: 0; font-size: 0.9rem; color: #444;">Volunteers with recognised security bodies from a local district team up for neighborhood landscaping.</p>
                 </div>
             </div>
             <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Team of volunteers planting" style="width: 100%; height: 180px; object-fit: cover;">
+                <picture>
+                    <source srcset="{% static 'coordinator/images/umuganda4.webp' %}" type="image/webp">
+                    <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Team of volunteers planting" width="799" height="533" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
+                </picture>
                 <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #2E8B57;">Tree Planting</h4>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Tree Planting</h4>
                     <p style="margin: 0; font-size: 0.9rem; color: #444;">Community members planting trees to green their neighborhood in the Eastern Province.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: white; border-radius: 5px;">
-        <h2 style="color: #2E8B57; margin-bottom: 1rem;">Ready to Make a Difference?</h2>
-        <p style="margin-bottom: 1.5rem;">Join upcoming community projects in your area and contribute to Rwanda's development.</p>
-        <a href="{% url 'project_list' %}" style="display: inline-block; background: #2E8B57; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-            View Upcoming Projects
-        </a>
-    </div>
 </div>
+
+<section class="home-section" aria-labelledby="community-stories-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <p class="text-uppercase fw-bold small mb-1" style="color: #1c6b41; letter-spacing: .08em;">Voices from Umuganda</p>
+            <h2 id="community-stories-heading" class="mb-1">Community stories</h2>
+            <p class="text-muted mb-0">Experiences shared by volunteers and local organizers.</p>
+        </div>
+    </div>
+    {% if testimonials %}
+        <div class="testimonial-grid">
+            {% for testimonial in testimonials %}
+                <article class="testimonial-card">
+                    <blockquote>“{{ testimonial.quote }}”</blockquote>
+                    <p class="fw-bold mb-0">{{ testimonial.attribution }}</p>
+                    {% if testimonial.role %}<p class="small text-muted mb-0">{{ testimonial.role }}</p>{% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="rounded p-4 text-center" style="background: #f4f8f5;">
+            <h3 class="h5">Your experience can encourage others</h3>
+            <p class="text-muted mb-0">Testimonials will be shown here after an administrator adds them with the contributor’s permission.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="home-cta" aria-labelledby="home-cta-heading">
+    <h2 id="home-cta-heading">Ready to make a difference?</h2>
+    <p>Whether you are looking for a way to help or organizing work for your community, take the next step and bring more neighbors together.</p>
+    <a href="{% url 'project_list' %}" class="btn btn-light">Explore upcoming projects</a>
+    <a href="{% url 'register' %}" class="btn btn-outline-light">Join as a volunteer</a>
+    <a href="{% url 'leader_login' %}" class="btn btn-outline-light">Leader sign in</a>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -292,29 +460,108 @@
 <script>
     (() => {
         const slideshow = document.querySelector("[data-slideshow]");
+        const videoSection = document.querySelector("[data-home-video]");
+        if (videoSection) {
+            const playerContainer = videoSection.querySelector("[data-video-player]");
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const firstVideo = videoSection.dataset.firstVideo;
+            const secondVideo = videoSection.dataset.secondVideo;
+            const playerParams = new URLSearchParams({
+                autoplay: "0",
+                cc_load_policy: "0",
+                controls: "0",
+                disablekb: "1",
+                enablejsapi: "1",
+                iv_load_policy: "3",
+                playsinline: "1",
+                rel: "0",
+                origin: window.location.origin,
+            });
+            playerContainer.src = `https://www.youtube.com/embed/${encodeURIComponent(firstVideo)}?${playerParams}`;
+
+            const loadPlayerApi = () => new Promise((resolve) => {
+                if (window.YT && window.YT.Player) {
+                    resolve(window.YT);
+                    return;
+                }
+                const previousCallback = window.onYouTubeIframeAPIReady;
+                window.onYouTubeIframeAPIReady = () => {
+                    if (typeof previousCallback === "function") previousCallback();
+                    resolve(window.YT);
+                };
+                const script = document.createElement("script");
+                script.src = "https://www.youtube.com/iframe_api";
+                script.async = true;
+                document.head.append(script);
+            });
+
+            loadPlayerApi().then((YT) => {
+                let secondVideoStarted = false;
+                new YT.Player(playerContainer, {
+                    events: {
+                        onReady(event) {
+                            event.target.mute();
+                            if (!reducedMotion) event.target.playVideo();
+                        },
+                        onStateChange(event) {
+                            if (event.data === YT.PlayerState.ENDED && !secondVideoStarted) {
+                                secondVideoStarted = true;
+                                event.target.loadVideoById(secondVideo);
+                                event.target.mute();
+                            }
+                        },
+                        onError(event) {
+                            console.error("The homepage video could not be played.", event.data);
+                            playerContainer.remove();
+                        },
+                    },
+                });
+            });
+        }
+
         if (!slideshow) return;
 
         const slides = [...slideshow.querySelectorAll(".home-slide")];
         const dots = [...slideshow.querySelectorAll("[data-slide-to]")];
+        const toggle = slideshow.querySelector("[data-slide-toggle]");
         let activeIndex = 0;
         let timer;
+        let manuallyPaused = false;
+        let pointerInside = false;
+        let focusInside = false;
 
         const showSlide = (index) => {
             activeIndex = (index + slides.length) % slides.length;
             slides.forEach((slide, i) => {
                 slide.classList.toggle("is-active", i === activeIndex);
                 slide.setAttribute("aria-hidden", i === activeIndex ? "false" : "true");
+                slide.setAttribute("aria-label", `${i + 1} of ${slides.length}`);
             });
             dots.forEach((dot, i) => dot.setAttribute("aria-current", i === activeIndex ? "true" : "false"));
         };
         const stopTimer = () => window.clearInterval(timer);
         const startTimer = () => {
             stopTimer();
-            if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            if (
+                !manuallyPaused &&
+                !pointerInside &&
+                !focusInside &&
+                !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ) {
                 timer = window.setInterval(() => showSlide(activeIndex + 1), 6000);
             }
         };
 
+        toggle.addEventListener("click", () => {
+            manuallyPaused = !manuallyPaused;
+            toggle.setAttribute("aria-pressed", String(manuallyPaused));
+            toggle.setAttribute(
+                "aria-label",
+                manuallyPaused ? "Resume slideshow" : "Pause slideshow"
+            );
+            toggle.textContent = manuallyPaused ? "Resume" : "Pause";
+            startTimer();
+        });
         dots.forEach((dot) => dot.addEventListener("click", () => {
             showSlide(Number(dot.dataset.slideTo));
             startTimer();
@@ -327,11 +574,23 @@
             showSlide(activeIndex + 1);
             startTimer();
         });
-        slideshow.addEventListener("mouseenter", stopTimer);
-        slideshow.addEventListener("mouseleave", startTimer);
-        slideshow.addEventListener("focusin", stopTimer);
+        slideshow.addEventListener("mouseenter", () => {
+            pointerInside = true;
+            stopTimer();
+        });
+        slideshow.addEventListener("mouseleave", () => {
+            pointerInside = false;
+            startTimer();
+        });
+        slideshow.addEventListener("focusin", () => {
+            focusInside = true;
+            stopTimer();
+        });
         slideshow.addEventListener("focusout", (event) => {
-            if (!slideshow.contains(event.relatedTarget)) startTimer();
+            if (!slideshow.contains(event.relatedTarget)) {
+                focusInside = false;
+                startTimer();
+            }
         });
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) stopTimer();

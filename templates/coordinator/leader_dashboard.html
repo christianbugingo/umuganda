@@ -6,7 +6,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
         <h1 class="text-success mb-1">Community Leader Dashboard</h1>
-        <p class="text-muted mb-0">Post project announcements and manage your community's activities.</p>
+        <p class="text-muted mb-0">Post projects and share community updates with residents.</p>
     </div>
     <a class="btn btn-outline-success" href="{% url 'profile_edit' %}">Edit Profile</a>
 </div>
@@ -46,16 +46,90 @@
                 <h2 class="h4 text-success mb-3">Post a project announcement</h2>
                 <form method="post">
                     {% csrf_token %}
+                    {% if project_form.errors %}
+                        <div class="alert alert-danger" role="alert" aria-labelledby="project-error-heading">
+                            <h3 class="h6" id="project-error-heading">Please correct the errors below.</h3>
+                            <ul class="mb-0">
+                                {% for field in project_form %}
+                                    {% for error in field.errors %}
+                                        <li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in project_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                     {% for field in project_form %}
                         <div class="mb-3">
                             <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                             {{ field }}
-                            {% for error in field.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+                            {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
+                            {% if field.errors %}<ul class="text-danger small mb-0" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                         </div>
                     {% endfor %}
-                    {% for error in project_form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
                     <button class="btn btn-success" type="submit">Publish Project</button>
                 </form>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="h4 text-success mb-2">Share a community announcement</h2>
+                <p class="text-muted">Post notices, local updates, or volunteer opportunities. These appear on the homepage in their own section, separate from project listings.</p>
+                <form method="post" action="{% url 'leader_announcement_create' %}">
+                    {% csrf_token %}
+                    {% if announcement_form.errors %}
+                        <div class="alert alert-danger" role="alert" aria-labelledby="announcement-error-heading">
+                            <h3 class="h6" id="announcement-error-heading">Please correct the errors below.</h3>
+                            <ul class="mb-0">
+                                {% for field in announcement_form %}
+                                    {% for error in field.errors %}
+                                        <li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in announcement_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    {% for field in announcement_form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
+                            {% if field.errors %}<ul class="text-danger small mb-0" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <button class="btn btn-success" type="submit">Publish announcement</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="h4 text-success mb-3">Your community announcements</h2>
+                {% for announcement in announcements %}
+                    <article class="border-start border-4 border-info bg-light rounded p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <h3 class="h5 mb-0">{{ announcement.title }}</h3>
+                            <span class="badge text-bg-info">{{ announcement.get_category_display }}</span>
+                        </div>
+                        <p class="text-muted small mt-2 mb-2">
+                            {{ announcement.area|default:managed_area }} · {{ announcement.created_at|date:"M j, Y" }}
+                            {% if not announcement.is_published %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}
+                            {% if announcement.expires_at %} · Expires {{ announcement.expires_at }}{% endif %}
+                        </p>
+                        <p class="mb-2">{{ announcement.body|truncatewords:35|linebreaksbr }}</p>
+                        <div class="d-flex gap-2 mt-3">
+                            <a class="btn btn-outline-success btn-sm" href="{% url 'leader_announcement_edit' announcement.pk %}">Edit announcement</a>
+                            <form method="post" action="{% url 'leader_announcement_delete' announcement.pk %}" onsubmit="return confirm('Delete this announcement? This cannot be undone.');">
+                                {% csrf_token %}
+                                <button class="btn btn-outline-danger btn-sm" type="submit">Delete announcement</button>
+                            </form>
+                        </div>
+                    </article>
+                {% empty %}
+                    <p class="text-muted mb-0">You have not posted a community announcement yet.</p>
+                {% endfor %}
             </div>
         </section>
 

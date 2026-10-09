@@ -1,0 +1,38 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Edit Announcement - Umuganda Coordinator{% endblock %}
+
+{% block content %}
+<section class="card shadow-sm mx-auto" style="max-width: 760px;">
+    <div class="card-body p-4">
+        <h1 class="h3 text-success mb-2">Edit community announcement</h1>
+        <p class="text-muted">{{ announcement.title }}</p>
+        <form method="post">
+            {% csrf_token %}
+            {% if form.errors %}
+                <div class="alert alert-danger" role="alert" aria-labelledby="announcement-edit-errors">
+                    <h2 class="h6" id="announcement-edit-errors">Please correct the errors below.</h2>
+                    <ul class="mb-0">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
+                    {% if field.errors %}<ul class="text-danger small mb-0" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-success" type="submit">Save announcement</button>
+            <a class="btn btn-outline-secondary" href="{% url 'leader_dashboard' %}">Cancel</a>
+        </form>
+    </div>
+</section>
+{% endblock %}

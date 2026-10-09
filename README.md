@@ -24,6 +24,8 @@ The application uses four main models:
 - **Admin Management** - Staff can create projects and mark participant attendance
 - **Community-Based** - Volunteers automatically linked to their village community
 - **Hours Tracking** - Monitor and report volunteer contribution hours
+- **Community Announcements** - Approved leaders can publish local notices, updates,
+  and volunteer opportunities separately from project listings
 
 ## 🗺️ Geographic Hierarchy
 
@@ -107,3 +109,110 @@ python manage.py runserver 0.0.0.0:8000
 Open `http://localhost:8000/` when running on your computer. If the project is running
 in a remote workspace or Codespace, forward port **8000** in the editor and open its
 forwarded URL in Safari; `localhost` on your computer does not point to a remote workspace.
+
+### Back up and restore SQLite
+
+Create an integrity-checked, timestamped backup while the app is running:
+
+```bash
+python scripts/sqlite_backup.py backup
+```
+
+Backups are written to `backups/` (excluded from Git). To keep a copy outside the
+computer or deployment filesystem, choose a durable backup location:
+
+```bash
+python scripts/sqlite_backup.py backup --backup-dir /path/to/durable/backups
+```
+
+For a daily local backup on macOS/Linux, add a scheduled task with `crontab -e`
+(replace both paths with absolute paths; use a destination on a separate drive):
+
+```cron
+0 2 * * * test -d /Volumes/BackupDrive && cd /absolute/path/to/umuganda && /absolute/path/to/python scripts/sqlite_backup.py backup --backup-dir /Volumes/BackupDrive/umuganda
+```
+
+To restore, stop the web server first, then use the backup file path. The command
+checks the backup and saves the current database as a `pre-restore-...` backup before
+replacing it:
+
+```bash
+python scripts/sqlite_backup.py restore /path/to/durable/backups/db-YYYYMMDDTHHMMSSffffffZ.sqlite3
+```
+
+The SQLite database does not contain uploaded profile-photo files. Back up the
+`media/` directory as well. Render's filesystem is ephemeral on free services, so
+the database and uploads are lost when the service spins down, restarts, or redeploys.
+Use the free deployment for a disposable preview only; never enter data you need to
+keep. The app remains on SQLite; keep it on one Render instance and do not enable
+multiple instances.
+
+#### Keep SQLite and uploads on a Render persistent disk
+
+Persistent disks require a paid Render web-service plan and incur additional disk
+charges. The current `render.yaml` intentionally does not select a paid plan or attach
+a disk; choose/approve the cost in Render first.
+
+In the Render Dashboard:
+
+1. Open the `umuganda` web service and select a paid plan that supports persistent
+   disks.
+2. Open **Disks**, add a disk mounted at `/var/data`, and start with **1 GB**. Render
+   restarts the service when you add the disk.
+3. In **Environment**, set `DJANGO_SQLITE_PATH` to `/var/data/db.sqlite3` and
+   `DJANGO_MEDIA_ROOT` to `/var/data/media`, then save and let the service redeploy.
+   New uploads and the database will now be written to the disk.
+
+**Before attaching a disk to an existing service, export any existing database and
+uploads.** Mounting the disk restarts the service, and the existing database on
+Render's ephemeral filesystem will not automatically move onto it. If the existing
+site contains data you need, use the Render Shell to create a SQLite backup and copy
+it off Render, and archive `/opt/render/project/src/media/` if it exists. After the
+disk is mounted, copy the saved database to `/var/data/db.sqlite3` and uploads to
+`/var/data/media/` before relying on the new deployment. If you cannot export the
+old files, assume a new empty database will be created.
+
+#### Render recovery plan
+
+Render automatically snapshots persistent disks about once every 24 hours and keeps
+snapshots for at least seven days. To recover from disk corruption or data loss, use
+the service's **Disks** page in the Render Dashboard and restore a snapshot from
+before the problem. A snapshot restore reverts the entire disk, including later
+database and upload changes; it is not a per-file restore. See
+[Render persistent-disk snapshots](https://render.com/docs/disks#disk-snapshots).
+
+For a SQLite-consistent logical backup, run this from the Render Shell periodically
+and before risky changes:
+
+```bash
+python scripts/sqlite_backup.py backup --backup-dir /var/data/backups
+```
+
+The backup command runs SQLite's online backup API and checks database integrity.
+Copy important backups off the Render disk as well: a disk snapshot protects against
+some failures, but a backup kept only on the same disk is not independent. The
+`media/` folder is included in Render disk snapshots but not in the SQLite backup
+file. To export photos from the Render Shell, archive them separately and copy both
+the database backup and media archive off the service. Test a restore periodically;
+the restore command makes a safety copy and must only be run with the app stopped.
+
+### Uploaded profile photos
+
+Locally, uploaded photos are stored under `media/` and served at `/media/` while
+`DEBUG` is enabled. In production, persist them using `DJANGO_MEDIA_ROOT` as described
+above. The current production setup does not yet serve uploaded media URLs; configure
+a production media-serving layer (or private object storage) before expecting profile
+photos to display on the hosted site.
+
+### Community announcements and testimonials
+
+Approved leaders can create, update, and delete their own community announcements
+from the leader dashboard. Announcements are stored in SQLite, appear in a visually
+separate homepage section, and can have an optional expiry date. Staff can also review
+and unpublish announcements in the Django admin under **Community announcements**.
+
+Authentic testimonials are managed by staff in the admin under **Testimonials**.
+Add a quote and attribution only after the contributor has agreed to publication, mark
+**Consent confirmed**, then mark **Is published**. The homepage randomly rotates up to
+three from the most recently added consented, published testimonials; no sample or
+fabricated testimonials are displayed when there are no approved entries.
