@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth import logout
+from django.contrib.auth import views as auth_views
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
@@ -65,6 +66,10 @@ def home(request):
     journal_story_cards = published_journals.filter(
         homepage_photo__isnull=True,
     ).prefetch_related('photos')[:4]
+    is_volunteer = request.user.is_authenticated and (
+        UserProfile.objects.filter(user=request.user, role='volunteer').exists()
+        or Volunteer.objects.filter(user=request.user).exists()
+    )
     random.shuffle(testimonials)
     return render(request, 'coordinator/home.html', {
         'announcements': announcements,
@@ -74,6 +79,7 @@ def home(request):
         'journal_count': journal_count,
         'journal_story_cards': journal_story_cards,
         'journal_photo_stories': journal_photo_stories,
+        'is_volunteer': is_volunteer,
     })
 
 
@@ -129,6 +135,21 @@ def journal_list(request):
     })
 
 
+class ConfiguredPasswordResetView(auth_views.PasswordResetView):
+    def form_valid(self, form):
+        if not settings.DEBUG and not settings.EMAIL_HOST:
+            return render(
+                self.request,
+                self.template_name,
+                {
+                    'form': form,
+                    'email_not_configured': True,
+                },
+                status=503,
+            )
+        return super().form_valid(form)
+
+
 def serve_journal_media(request, file_path):
     media_root = Path(settings.MEDIA_ROOT).resolve()
     journal_root = (media_root / 'journals').resolve()
@@ -156,6 +177,19 @@ def serve_journal_media(request, file_path):
     return response
 
 
+def _volunteer_project_scope(profile):
+    if not profile.province:
+        return Q(pk__in=[])
+
+    scope = Q(community__province=profile.province)
+    for field in ('district', 'sector', 'cell', 'village'):
+        value = getattr(profile, field)
+        if not value:
+            return Q(pk__in=[])
+        scope &= Q(**{f'community__{field}__in': ['', value]})
+    return scope
+
+
 
 def project_list(request):
     """Show all upcoming projects with search and filter functionality"""
@@ -174,6 +208,10 @@ def project_list(request):
         status='planned',
         date__gte=timezone.localdate(),
     ).select_related('community').order_by('date', 'id')
+    if request.user.is_authenticated:
+        profile = _profile_for(request.user)
+        if profile.role == 'volunteer':
+            projects = projects.filter(_volunteer_project_scope(profile))
 
     # Apply search filter
     if search_query:
@@ -259,11 +297,17 @@ def project_list(request):
 
 def project_detail(request, project_id):
     """Show details of a specific project"""
-    project = get_object_or_404(
-        UmugandaProject,
-        id=project_id,
+    projects = UmugandaProject.objects.filter(
         status='planned',
         date__gte=timezone.localdate(),
+    )
+    if request.user.is_authenticated:
+        profile = _profile_for(request.user)
+        if profile.role == 'volunteer':
+            projects = projects.filter(_volunteer_project_scope(profile))
+    project = get_object_or_404(
+        projects,
+        id=project_id,
     )
     # Get participants for this project
     participants = Participation.objects.filter(project=project).select_related('volunteer__user')
@@ -283,19 +327,18 @@ def project_detail(request, project_id):
 @login_required
 def volunteer_signup(request, project_id):
     """Sign up a user as a volunteer for a project"""
-    project = get_object_or_404(
-        UmugandaProject,
-        id=project_id,
-        status='planned',
-        date__gte=timezone.localdate(),
-    )
-    profile, _ = UserProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'role': 'volunteer'},
-    )
+    profile = _profile_for(request.user)
     if profile.role != 'volunteer':
         messages.error(request, "Community leaders cannot sign up as volunteers.")
         return redirect('leader_dashboard')
+
+    project = get_object_or_404(
+        UmugandaProject.objects.filter(
+            status='planned',
+            date__gte=timezone.localdate(),
+        ).filter(_volunteer_project_scope(profile)),
+        id=project_id,
+    )
     
     # Check if user is already a volunteer
     volunteer, created = Volunteer.objects.get_or_create(
@@ -322,70 +365,13 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            
-            # Auto-login after registration
             login(request, user)
-            
-            messages.success(request, f"Registration successful! Welcome to Umuganda Coordinator, {user.username}.")
+            request.session['show_volunteer_signup_success'] = True
             return redirect('dashboard')
     else:
         form = RegisterForm()
     
     return render(request, 'coordinator/register.html', {'form': form})
-
-def user_login(request):
-    """Custom login view (optional, uses Django's built-in for now)"""
-    return render(request, 'coordinator/login.html')
-@login_required
-def dashboard(request):
-    """User dashboard showing profile and project participation"""
-    # Get or create volunteer profile
-    volunteer, created = Volunteer.objects.get_or_create(
-        user=request.user,
-        defaults={'phone': ''}
-    )
-    
-    # Get projects user has signed up for
-    # We'll need to create a Participation model for this, but for now show all projects
-    # Get projects user has signed up for through Participation
-    participations = Participation.objects.filter(
-        volunteer=volunteer
-    ).select_related('project', 'project__community').order_by('-signed_up_at')
-    
-    context = {
-        'volunteer': volunteer,
-        'user': request.user,
-        'participations': participations,
-        'total_projects': participations.count(),
-        'total_hours': sum(p.hours_contributed for p in participations),
-        'projects_attended': participations.filter(attended=True).count(),
-    }
-    return render(request, 'coordinator/dashboard.html', context)
-def user_login(request):
-    """Handle user login"""
-    if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Welcome back, {username}!")
-                
-                # Redirect based on user type
-                if user.is_staff:
-                    return redirect('admin:index')
-                else:
-                    return redirect('dashboard')
-            else:
-                messages.error(request, "Invalid username or password.")
-        else:
-            messages.error(request, "Invalid username or password.")
-    else:
-        form = LoginForm()
-    
-    return render(request, 'coordinator/login.html', {'form': form})
 
 def user_logout(request):
     """Handle user logout"""
@@ -526,6 +512,10 @@ def volunteer_dashboard(request):
         'total_projects': participations.count(),
         'total_hours': sum(p.hours_contributed for p in participations),
         'projects_attended': participations.filter(attended=True).count(),
+        'show_signup_success': request.session.pop(
+            'show_volunteer_signup_success',
+            False,
+        ),
     })
 
 

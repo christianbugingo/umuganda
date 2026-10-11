@@ -495,6 +495,17 @@ class ProjectPageTests(TestCase):
             username="projectvolunteer",
             password="StrongPass123!",
         )
+        UserProfile.objects.create(
+            user=volunteer_user,
+            role="volunteer",
+            community=self.community,
+            province=self.community.province,
+            district=self.community.district,
+            sector=self.community.sector,
+            cell=self.community.cell,
+            village=self.community.village,
+            is_approved=True,
+        )
         client = Client(HTTP_HOST="testserver")
         client.force_login(volunteer_user)
 
@@ -530,8 +541,14 @@ class RegistrationTests(TestCase):
     def test_volunteer_registration_creates_account_and_profile(self):
         response = self.client.post("/register/", {
             "username": "newvolunteer",
-            "email": "volunteer@example.com",
+            "first_name": "New",
+            "last_name": "Volunteer",
             "phone": "+250788000001",
+            "province": "kigali",
+            "district": "Gasabo",
+            "sector": "Kacyiru",
+            "cell": "Kagugu",
+            "village": "Kibagabaga",
             "password1": "StrongPass123!",
             "password2": "StrongPass123!",
         })
@@ -543,15 +560,22 @@ class RegistrationTests(TestCase):
         )
         user = User.objects.get(username="newvolunteer")
         self.assertTrue(user.check_password("StrongPass123!"))
+        self.assertEqual(user.email, "")
         self.assertTrue(Volunteer.objects.filter(
             user=user,
             phone="+250788000001",
         ).exists())
-        self.assertEqual(
-            UserProfile.objects.get(user=user).role,
-            "volunteer",
-        )
-        self.assertEqual(self.client.get("/dashboard/volunteer/").status_code, 200)
+        profile = UserProfile.objects.get(user=user)
+        self.assertEqual(profile.role, "volunteer")
+        self.assertEqual(profile.province, "kigali")
+        self.assertEqual(profile.district, "Gasabo")
+        self.assertEqual(profile.sector, "Kacyiru")
+        self.assertEqual(profile.cell, "Kagugu")
+        self.assertEqual(profile.village, "Kibagabaga")
+        dashboard = self.client.get("/dashboard/volunteer/")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertContains(dashboard, 'id="volunteerWelcomeModal"')
+        self.assertContains(dashboard, "You're signed in as a volunteer")
 
     def test_district_leader_enters_and_saves_only_their_area(self):
         other_district_community = Community.objects.create(
@@ -983,6 +1007,11 @@ class ProfilePhotoTests(TestCase):
             "last_name": "Volunteer",
             "email": "photo@example.com",
             "phone": "123",
+            "province": "kigali",
+            "district": "Gasabo",
+            "sector": "Kacyiru",
+            "cell": "Kagugu",
+            "village": "Kibagabaga",
             "photo": upload,
         })
 

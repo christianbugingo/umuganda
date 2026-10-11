@@ -34,6 +34,12 @@
                     <strong>Phone:</strong><br>
                     {{ volunteer.phone|default:"Not provided" }}
                 </div>
+                {% if profile.managed_area_label %}
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Your area:</strong><br>
+                    {{ profile.managed_area_label }}
+                </div>
+                {% endif %}
                 {% if volunteer.community %}
                 <div style="margin-bottom: 0.75rem;">
                     <strong>Community:</strong><br>
@@ -121,6 +127,27 @@
   </div>
 </div>
 
+{% if show_signup_success %}
+<div class="modal fade" id="volunteerWelcomeModal" tabindex="-1" aria-labelledby="volunteerWelcomeTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="volunteerWelcomeTitle">You're signed in as a volunteer</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your volunteer account is ready. The projects list will show activities for your registered area.</p>
+                {% if profile.managed_area_label %}<p class="mb-0"><strong>Your area:</strong> {{ profile.managed_area_label }}</p>{% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue to dashboard</button>
+                <a class="btn btn-success" href="{% url 'project_list' %}">Find local projects</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <style>
     @media (max-width: 768px) {
         .container > div {
@@ -128,4 +155,18 @@
         }
     }
 </style>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{% if show_signup_success %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const welcomeModal = document.getElementById('volunteerWelcomeModal');
+        if (welcomeModal && window.bootstrap) {
+            new bootstrap.Modal(welcomeModal).show();
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}

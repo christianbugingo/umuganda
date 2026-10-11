@@ -36,32 +36,83 @@ class AccessibleFormMixin:
 
 
 class RegisterForm(AccessibleFormMixin, UserCreationForm):
-    email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=150, required=True)
+    last_name = forms.CharField(max_length=150, required=True)
+    email = forms.EmailField(
+        required=False,
+        help_text='Optional. Add an email address if you may need a password reset.',
+    )
     phone = forms.CharField(max_length=15, required=True)
+    province = forms.ChoiceField(
+        choices=[('', 'Select a province'), *Community.PROVINCE_CHOICES],
+    )
+    district = forms.CharField(max_length=100, required=True)
+    sector = forms.CharField(max_length=100, required=True)
+    cell = forms.CharField(max_length=100, required=True)
+    village = forms.CharField(max_length=100, required=True)
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'phone', 'password1', 'password2']
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'phone', 'province', 'district', 'sector',
+            'cell', 'village', 'password1', 'password2',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.location_suggestions = {}
+        for field_name in ('district', 'sector', 'cell', 'village'):
+            self.fields[field_name].widget.attrs['list'] = (
+                f'{field_name}-location-options'
+            )
+            self.location_suggestions[field_name] = (
+                Community.objects.exclude(**{field_name: ''})
+                .values_list(field_name, flat=True)
+                .distinct()
+                .order_by(field_name)
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        for field_name in ('district', 'sector', 'cell', 'village'):
+            value = cleaned_data.get(field_name)
+            if value:
+                cleaned_data[field_name] = value.strip()
+        return cleaned_data
     
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name'].strip()
+        user.last_name = self.cleaned_data['last_name'].strip()
+        user.email = self.cleaned_data.get('email') or ''
         
         if commit:
             user.save()
+            location = {
+                field: self.cleaned_data[field]
+                for field in ('province', 'district', 'sector', 'cell', 'village')
+            }
+            community, _ = Community.objects.get_or_create(**location)
             Volunteer.objects.create(
                 user=user,
-                phone=self.cleaned_data['phone']
+                phone=self.cleaned_data['phone'],
+                community=community,
             )
             UserProfile.objects.create(
                 user=user,
                 role='volunteer',
                 phone=self.cleaned_data['phone'],
                 is_approved=True,
+                community=community,
+                **location,
             )
         return user
 
 class LoginForm(AccessibleFormMixin, AuthenticationForm):
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        'invalid_login': 'The username or password is incorrect. Please check your information and try again.',
+    }
     username = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Username'
@@ -257,8 +308,15 @@ class JournalCommentForm(AccessibleFormMixin, forms.ModelForm):
 class ProfileEditForm(AccessibleFormMixin, forms.Form):
     first_name = forms.CharField(max_length=150, required=False)
     last_name = forms.CharField(max_length=150, required=False)
-    email = forms.EmailField()
+    email = forms.EmailField(required=False)
     phone = forms.CharField(max_length=15, required=False)
+    province = forms.ChoiceField(
+        choices=[('', 'Select a province'), *Community.PROVINCE_CHOICES],
+    )
+    district = forms.CharField(max_length=100, required=True)
+    sector = forms.CharField(max_length=100, required=True)
+    cell = forms.CharField(max_length=100, required=True)
+    village = forms.CharField(max_length=100, required=True)
     photo = forms.ImageField(
         required=False,
         help_text='Upload a JPG, PNG, or GIF image (maximum 5 MB).',
@@ -268,6 +326,21 @@ class ProfileEditForm(AccessibleFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         self.user = user
         self.profile = profile
+        self.location_suggestions = {}
+        if profile.role != 'volunteer':
+            for field_name in ('province', 'district', 'sector', 'cell', 'village'):
+                self.fields.pop(field_name)
+        else:
+            for field_name in ('district', 'sector', 'cell', 'village'):
+                self.fields[field_name].widget.attrs['list'] = (
+                    f'{field_name}-location-options'
+                )
+                self.location_suggestions[field_name] = (
+                    Community.objects.exclude(**{field_name: ''})
+                    .values_list(field_name, flat=True)
+                    .distinct()
+                    .order_by(field_name)
+                )
         if not self.is_bound:
             self.initial.update({
                 'first_name': user.first_name,
@@ -275,6 +348,9 @@ class ProfileEditForm(AccessibleFormMixin, forms.Form):
                 'email': user.email,
                 'phone': profile.phone,
             })
+            if profile.role == 'volunteer':
+                for field_name in ('province', 'district', 'sector', 'cell', 'village'):
+                    self.initial[field_name] = getattr(profile, field_name)
 
     def clean_photo(self):
         photo = self.cleaned_data.get('photo')
@@ -289,9 +365,23 @@ class ProfileEditForm(AccessibleFormMixin, forms.Form):
         self.user.save(update_fields=['first_name', 'last_name', 'email'])
 
         self.profile.phone = self.cleaned_data['phone']
+        volunteer_fields = {'phone': self.profile.phone}
+        if self.profile.role == 'volunteer':
+            location = {
+                field: self.cleaned_data[field]
+                for field in ('province', 'district', 'sector', 'cell', 'village')
+            }
+            community, _ = Community.objects.get_or_create(**location)
+            self.profile.community = community
+            for field, value in location.items():
+                setattr(self.profile, field, value)
+            volunteer_fields['community'] = community
         if self.cleaned_data.get('photo'):
             self.profile.photo = self.cleaned_data['photo']
         self.profile.save()
-        Volunteer.objects.filter(user=self.user).update(phone=self.profile.phone)
+        Volunteer.objects.update_or_create(
+            user=self.user,
+            defaults=volunteer_fields,
+        )
         Community.objects.filter(leader=self.user).update(leader_phone=self.profile.phone)
         return self.profile

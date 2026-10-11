@@ -671,7 +671,11 @@
         <p>Find local projects, join your neighbours, and keep community information in one place.</p>
         <div class="home-actions">
             <a class="home-hero-link" href="{% url 'project_list' %}">Find a project</a>
-            <a class="home-secondary-link" href="{% url 'register' %}">Join as a volunteer</a>
+            {% if is_volunteer %}
+                <button class="home-secondary-link" type="button" data-bs-toggle="modal" data-bs-target="#alreadyVolunteerModal">Join as a volunteer</button>
+            {% elif not user.is_authenticated or user.is_staff %}
+                <a class="home-secondary-link" href="{% url 'register' %}">Join as a volunteer</a>
+            {% endif %}
         </div>
     </div>
     <figure class="home-hero-image">
@@ -715,7 +719,7 @@
                 </svg>
             </span>
             <p>Notices, local updates, and opportunities shared by approved community leaders.</p>
-            <a href="{% url 'leader_login' %}" class="announcement-leader-link">Leader sign in</a>
+            {% if not user.is_authenticated or user.is_staff %}<a href="{% url 'leader_login' %}" class="announcement-leader-link">Leader sign in</a>{% endif %}
         </div>
     </div>
     {% if announcements %}
@@ -762,12 +766,12 @@
         <article class="feature">
             <h3>Take part</h3>
             <p>Register for local activities and keep your participation history together.</p>
-            <a href="{% url 'register' %}">Create a volunteer account</a>
+            {% if not user.is_authenticated or user.is_staff %}<a href="{% url 'register' %}">Create a volunteer account</a>{% endif %}
         </article>
         <article class="feature">
             <h3>Coordinate local work</h3>
             <p>Approved community leaders can publish projects and share timely updates.</p>
-            <a href="{% url 'leader_login' %}">Leader sign in</a>
+            {% if not user.is_authenticated or user.is_staff %}<a href="{% url 'leader_login' %}">Leader sign in</a>{% endif %}
         </article>
     </div>
 </section>
@@ -889,8 +893,29 @@
     <h2 id="home-cta-heading">Get involved in your community</h2>
     <p>Find an upcoming project or create an account to take part in local work.</p>
     <a href="{% url 'project_list' %}" class="btn btn-light">Explore projects</a>
-    <a href="{% url 'register' %}" class="btn btn-outline-light">Register as a volunteer</a>
+    {% if is_volunteer %}
+        <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#alreadyVolunteerModal">Join as a volunteer</button>
+    {% elif not user.is_authenticated or user.is_staff %}
+        <a href="{% url 'register' %}" class="btn btn-outline-light">Register as a volunteer</a>
+    {% endif %}
 </section>
+{% if is_volunteer %}
+<div class="modal fade" id="alreadyVolunteerModal" tabindex="-1" aria-labelledby="alreadyVolunteerTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5 text-success" id="alreadyVolunteerTitle">You’ve already joined as a volunteer</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">You are signed in as a volunteer. Browse projects in your area to get involved.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a class="btn btn-success" href="{% url 'project_list' %}">Browse projects</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 </div>
 {% endblock %}
 

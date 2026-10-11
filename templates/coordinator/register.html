@@ -38,6 +38,16 @@
                 </label>
                 
                 {{ field }}
+
+                {% if field.name == 'district' %}
+                    <datalist id="district-location-options">{% for area in form.location_suggestions.district %}<option value="{{ area }}">{% endfor %}</datalist>
+                {% elif field.name == 'sector' %}
+                    <datalist id="sector-location-options">{% for area in form.location_suggestions.sector %}<option value="{{ area }}">{% endfor %}</datalist>
+                {% elif field.name == 'cell' %}
+                    <datalist id="cell-location-options">{% for area in form.location_suggestions.cell %}<option value="{{ area }}">{% endfor %}</datalist>
+                {% elif field.name == 'village' %}
+                    <datalist id="village-location-options">{% for area in form.location_suggestions.village %}<option value="{{ area }}">{% endfor %}</datalist>
+                {% endif %}
                 
                 {% if field.help_text %}
                     <small id="{{ field.auto_id }}_helptext" style="color: #666; display: block; margin-top: 0.25rem;">{{ field.help_text|safe }}</small>
