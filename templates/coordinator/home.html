@@ -195,23 +195,6 @@
     .home-cta h2 { color: #fff; }
     .home-cta p { max-width: 55rem; margin: 0 auto 1.4rem; color: #e1f1e5; }
     .home-cta a { margin: .25rem; }
-    .home-video {
-        position: relative;
-        overflow: hidden;
-        width: 100vw;
-        height: clamp(210px, 30vh, 320px);
-        margin: -2rem 0 2rem calc(50% - 50vw);
-        background: #173d27 url("{% static 'coordinator/images/umuganda1.webp' %}") center 45% / cover no-repeat;
-    }
-    .home-video iframe {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: max(100vw, calc(clamp(210px, 30vh, 320px) * 16 / 9));
-        height: max(clamp(210px, 30vh, 320px), calc(100vw * 9 / 16));
-        border: 0;
-        transform: translate(-50%, -50%);
-    }
     @media (max-width: 760px) {
         .home-hero { grid-template-columns: 1fr; gap: 2rem; padding: 2rem 1.35rem; }
         .home-hero h1 { font-size: clamp(2.5rem, 12vw, 3.7rem); }
@@ -223,82 +206,517 @@
     @media (prefers-reduced-motion: reduce) {
         .home-slide, .home-hero-link, .features .feature { transition: none; }
     }
+    .home-page {
+        --forest: #1c6b41;
+        --ink: #202a24;
+        --muted: #58665d;
+        --line: #d7dfd9;
+        --paper: #fff;
+        color: var(--ink);
+    }
+    .home-page .home-hero {
+        grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+        gap: 3rem;
+        min-height: 0;
+        margin: 0;
+        padding: 2.5rem 0 3rem;
+        overflow: visible;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .home-page .home-date {
+        display: block;
+        margin-bottom: .85rem;
+        color: var(--muted);
+        font-size: .85rem;
+        font-weight: 600;
+    }
+    .home-page .home-date::before { display: none; }
+    .home-page .home-hero h1 {
+        max-width: 11ch;
+        margin-bottom: 1rem;
+        color: var(--ink);
+        font-size: 3.25rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 1.08;
+    }
+    .home-page .home-hero-copy > p {
+        max-width: 34rem;
+        margin-bottom: 1.5rem;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+    .home-page .home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+    .home-page .home-hero-link,
+    .home-page .home-secondary-link {
+        display: inline-flex;
+        min-height: 2.9rem;
+        align-items: center;
+        justify-content: center;
+        padding: .7rem 1rem;
+        border: 1px solid var(--forest);
+        border-radius: 4px;
+        background: var(--forest);
+        color: #fff;
+        font-weight: 650;
+        text-decoration: none;
+        box-shadow: none;
+    }
+    .home-page .home-secondary-link { background: transparent; color: var(--forest); }
+    .home-page .home-hero-link:hover { background: #155333; color: #fff; }
+    .home-page .home-secondary-link:hover { background: #edf4ef; color: #155333; }
+    .home-page .home-hero-image { min-width: 0; margin: 0; }
+    .home-page .home-hero-image img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1.35;
+        object-fit: cover;
+    }
+    .home-page .home-hero-image figcaption { margin-top: .6rem; color: var(--muted); font-size: .85rem; }
+    .home-page .home-section,
+    .home-page .home-overview {
+        margin: 0;
+        padding: 2.5rem 0;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        border-radius: 0;
+        background: transparent;
+    }
+    .home-page .home-section > h2,
+    .home-page .home-section-heading h2,
+    .home-page .home-overview h2 {
+        margin: 0;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.9rem;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+    .home-page .home-section-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 1rem 2rem;
+        margin-bottom: 1.4rem;
+    }
+    .home-page .home-eyebrow {
+        margin: 0 0 .35rem;
+        color: #8d4c2c;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .home-page .home-section-heading > p,
+    .home-page .home-overview-intro { max-width: 38rem; margin: 0; color: var(--muted); }
+    .home-page .home-section-heading a { flex: 0 0 auto; }
+    .home-page .announcement-intro {
+        position: relative;
+        display: grid;
+        grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+        align-items: center;
+        gap: .9rem 1.2rem;
+        max-width: 43rem;
+        padding: 1rem 1.1rem 1rem 1.25rem;
+        border: 1px solid #d7dfd9;
+        border-left: 3px solid #bd6337;
+        background: linear-gradient(110deg, #f5f8f4 0%, #fff 76%);
+        box-shadow: 0 8px 20px rgba(32, 55, 39, .07);
+    }
+    .home-page .announcement-intro-icon {
+        display: grid;
+        width: 2.75rem;
+        height: 2.75rem;
+        place-items: center;
+        border: 1px solid #d7dfd9;
+        background: #edf4ee;
+        color: #1c6b41;
+    }
+    .home-page .announcement-intro-icon svg { display: block; width: 1.55rem; height: 1.55rem; }
+    .home-page .announcement-intro p {
+        margin: 0;
+        color: var(--muted);
+        font-size: .95rem;
+        line-height: 1.55;
+    }
+    .home-page .announcement-leader-link {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        gap: .65rem;
+        padding: .65rem .9rem;
+        border: 1px solid #1c6b41;
+        background: #1c6b41;
+        box-shadow: 0 3px 0 #12452a;
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .home-page .announcement-leader-link::after { content: "→"; font-size: 1.15rem; line-height: 1; }
+    .home-page .announcement-leader-link:hover {
+        background: #155333;
+        box-shadow: 0 5px 0 #12452a;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    .home-page .announcement-leader-link:focus-visible { outline: 3px solid #bd6337; outline-offset: 3px; }
+    .home-page .announcement-grid,
+    .home-page .testimonial-grid,
+    .home-page .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+    .home-page .journal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    .home-page .announcement-card {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--forest);
+        border-radius: 4px;
+        background: var(--paper);
+    }
+    .home-page .announcement-card[data-category="notice"] { border-left-color: #a65d27; }
+    .home-page .announcement-card[data-category="opportunity"] { border-left-color: #246a83; }
+    .home-page .announcement-card h3 { color: var(--ink); }
+    .home-page .home-empty-state { padding: 1rem 0; color: var(--muted); }
+    .home-page .announcement-more-wrap { display: flex; justify-content: flex-end; margin-top: 1.1rem; }
+    .home-page .announcement-more {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: .65rem;
+        padding: .65rem .95rem;
+        border: 1px solid var(--forest);
+        background: #fff;
+        box-shadow: 0 3px 0 #dbe5dd;
+        color: var(--forest);
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .home-page .announcement-more::after { content: "→"; font-size: 1.1rem; }
+    .home-page .announcement-more:hover {
+        background: #edf4ee;
+        box-shadow: 0 5px 0 #dbe5dd;
+        color: #155333;
+        transform: translateY(-2px);
+    }
+    .home-page .announcement-more:focus-visible { outline: 3px solid #bd6337; outline-offset: 3px; }
+    .home-page .home-overview { padding-top: 2.75rem; }
+    .home-page .features { margin: 1.5rem 0 0 !important; }
+    .home-page .features .feature {
+        min-width: 0;
+        min-height: 13rem;
+        padding: 1.2rem !important;
+        border: 0 !important;
+        border-top: 3px solid var(--forest) !important;
+        border-radius: 4px !important;
+        background: #fff !important;
+        box-shadow: 0 4px 12px rgba(28, 55, 37, .06);
+        transform-style: preserve-3d;
+        transition: transform .24s ease, box-shadow .24s ease;
+    }
+    .home-page .feature h3 { color: var(--ink) !important; font-size: 1.1rem; }
+    .home-page .feature p { color: var(--muted); }
+    .home-page .feature a {
+        display: inline-flex;
+        min-height: 2.8rem;
+        align-items: center;
+        gap: .65rem;
+        margin-top: .25rem;
+        padding: .65rem .9rem;
+        border: 1px solid var(--forest);
+        border-radius: 4px;
+        background: var(--forest);
+        box-shadow: 0 3px 0 #12452a;
+        color: #fff;
+        font-weight: 650;
+        text-decoration: none;
+        transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .home-page .feature a::after { content: "→"; font-size: 1.15rem; line-height: 1; }
+    .home-page .feature a:hover { background: #155333; color: #fff; }
+    .home-page .feature a:focus-visible { outline: 3px solid #a65d27; outline-offset: 3px; }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+        .home-page .features .feature:hover,
+        .home-page .features .feature:focus-within {
+            box-shadow: 0 18px 28px rgba(28, 55, 37, .14);
+            transform: perspective(900px) rotateX(2deg) rotateY(-1deg) translateY(-5px);
+        }
+        .home-page .feature:hover a,
+        .home-page .feature:focus-within a {
+            box-shadow: 0 5px 0 #12452a;
+            transform: translateY(-2px) translateZ(8px);
+        }
+    }
+    .home-page .how-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+    .home-page .how-card { min-width: 0; padding: 0 0 0 1rem; border: 0; border-left: 2px solid var(--line); border-radius: 0; }
+    .home-page .how-card h3 { color: var(--forest); }
+    .home-page .journal-card {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: #fff;
+        box-shadow: 0 5px 14px rgba(28, 55, 37, .07);
+        transform-style: preserve-3d;
+        transition: transform .24s ease, box-shadow .24s ease;
+    }
+    .home-page .journal-card-link { display: block; height: 100%; color: inherit; text-decoration: none; }
+    .home-page .journal-card-image { position: relative; overflow: hidden; aspect-ratio: 1.28; background: #dce7df; }
+    .home-page .journal-card-image img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+    .home-page .journal-card-date {
+        position: absolute;
+        bottom: .7rem;
+        left: .7rem;
+        padding: .35rem .55rem;
+        background: #fff;
+        color: var(--ink);
+        font-size: .78rem;
+        font-weight: 700;
+    }
+    .home-page .journal-card-copy { display: grid; grid-template-rows: auto auto 1fr auto; gap: .45rem; padding: .9rem; }
+    .home-page .journal-card-location { margin: 0; color: #8d4c2c; font-size: .76rem; font-weight: 700; text-transform: uppercase; }
+    .home-page .journal-card h3 { margin: 0; color: var(--ink); font-family: Georgia, "Times New Roman", serif; font-size: 1.25rem; line-height: 1.2; }
+    .home-page .journal-card-summary { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+    .home-page .journal-card-action { display: inline-flex; align-items: center; gap: .45rem; margin-top: .35rem; color: var(--forest); font-size: .88rem; font-weight: 700; }
+    .home-page .journal-card-action::after { content: "→"; font-size: 1.1rem; }
+    .home-page .journal-card-link:focus-visible { outline: 3px solid #a65d27; outline-offset: -3px; }
+    .home-page .journal-empty { padding: 1.25rem 0; border-top: 1px solid var(--line); color: var(--muted); }
+    .home-page .journal-see-more-wrap { display: flex; justify-content: flex-end; margin-top: 1.1rem; }
+    .home-page .journal-see-more {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: .65rem;
+        padding: .65rem .95rem;
+        border: 1px solid var(--forest);
+        background: #fff;
+        box-shadow: 0 3px 0 #dbe5dd;
+        color: var(--forest);
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .home-page .journal-see-more::after { content: "→"; font-size: 1.1rem; }
+    .home-page .journal-see-more:hover {
+        background: #edf4ee;
+        box-shadow: 0 5px 0 #dbe5dd;
+        color: #155333;
+        transform: translateY(-2px);
+    }
+    .home-page .journal-see-more:focus-visible { outline: 3px solid #bd6337; outline-offset: 3px; }
+    .home-page .journal-archive-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    .home-page .journal-archive-card {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: #fff;
+        box-shadow: 0 5px 14px rgba(28, 55, 37, .07);
+        transform-style: preserve-3d;
+        transition: transform .24s ease, box-shadow .24s ease;
+    }
+    .home-page .journal-archive-link { display: block; overflow: hidden; color: inherit; text-decoration: none; }
+    .home-page .journal-archive-link:focus-visible { outline: 3px solid #a65d27; outline-offset: -3px; }
+    .home-page .journal-archive-caption-link { color: inherit; text-decoration: none; }
+    .home-page .journal-archive-caption-link:focus-visible { outline: 3px solid #a65d27; outline-offset: 2px; }
+    .home-page .journal-archive-card picture { display: block; overflow: hidden; aspect-ratio: 1.28; background: #dce7df; }
+    .home-page .journal-archive-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+    .home-page .journal-archive-card figcaption { padding: .8rem .9rem; color: var(--ink); font-family: Georgia, "Times New Roman", serif; font-size: 1.05rem; font-weight: 600; }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+        .home-page .journal-archive-card:hover,
+        .home-page .journal-archive-card:focus-within {
+            box-shadow: 0 16px 28px rgba(28, 55, 37, .15);
+            transform: perspective(900px) rotateX(1.5deg) translateY(-5px);
+        }
+        .home-page .journal-archive-card:hover img,
+        .home-page .journal-archive-card:focus-within img { transform: scale(1.035); }
+    }
+    @media (max-width: 900px) {
+        .home-page .journal-archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 900px) {
+        .home-page .journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+        .home-page .journal-card:hover,
+        .home-page .journal-card:focus-within {
+            box-shadow: 0 16px 28px rgba(28, 55, 37, .15);
+            transform: perspective(900px) rotateX(1.5deg) translateY(-5px);
+        }
+        .home-page .journal-card:hover img,
+        .home-page .journal-card:focus-within img { transform: scale(1.035); }
+    }
+    .home-page .testimonial-card { min-width: 0; padding: 1rem; border-left: 2px solid var(--forest); border-radius: 0; background: #fff; }
+    .home-page .testimonial-card blockquote { color: var(--ink); }
+    .home-page .home-cta {
+        margin: 2.5rem 0;
+        padding: 2rem;
+        border-left: 4px solid #c77948;
+        border-radius: 4px;
+        background: #193f2b;
+        text-align: left;
+    }
+    .home-page .home-cta h2 { color: #fff; font-size: 1.9rem; }
+    .home-page .home-cta p { max-width: 42rem; margin: .6rem 0 1rem; }
+    .home-page .home-cta a { margin: .2rem .5rem .2rem 0; }
+    @media (max-width: 760px) {
+        .home-page .home-hero { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding: 1.75rem 0 2rem; }
+        .home-page .home-hero h1 { max-width: 15ch; font-size: 2.75rem; }
+        .home-page .announcement-grid,
+        .home-page .testimonial-grid,
+        .home-page .journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .home-page .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .home-page .home-section-heading { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+        .home-page .home-hero h1 { font-size: 2.25rem; }
+        .home-page .home-hero-copy > p { font-size: 1rem; }
+        .home-page .home-actions { align-items: stretch; flex-direction: column; }
+        .home-page .home-hero-link,
+        .home-page .home-secondary-link { width: 100%; }
+        .home-page .home-section,
+        .home-page .home-overview { padding: 2rem 0; }
+        .home-page .announcement-grid,
+        .home-page .features,
+        .home-page .how-grid { grid-template-columns: minmax(0, 1fr); }
+        .home-page .announcement-intro { grid-template-columns: 2.75rem minmax(0, 1fr); }
+        .home-page .announcement-leader-link { grid-column: 2; justify-self: start; }
+        .home-page .journal-grid { grid-template-columns: minmax(0, 1fr); }
+        .home-page .journal-archive-grid { grid-template-columns: minmax(0, 1fr); }
+        .home-page .journal-archive-card picture { aspect-ratio: 1.5; }
+        .home-page .journal-card-image { aspect-ratio: 1.5; }
+        .home-page .home-cta { margin: 2rem 0; padding: 1.25rem; }
+        .home-page .features .feature { min-height: 0; }
+    }
+    .home-page .home-motion {
+        display: grid;
+        grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+        align-items: center;
+        gap: 2rem;
+        padding: 2.5rem 0;
+        border-bottom: 1px solid var(--line);
+    }
+    .home-page .home-motion h2 {
+        max-width: 13ch;
+        margin: 0 0 .8rem;
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 2rem;
+        font-weight: 500;
+        line-height: 1.15;
+    }
+    .home-page .home-motion-copy > p:last-child { max-width: 30rem; margin: 0; color: var(--muted); }
+    .home-page .home-motion-scene {
+        position: relative;
+        min-width: 0;
+        aspect-ratio: 1.5;
+        margin: 0;
+        background-image: radial-gradient(#c7d6ca 1px, transparent 1px);
+        background-position: center;
+        background-size: 18px 18px;
+    }
+    .home-page .home-motion-canvas { display: block; width: 100%; height: 100%; }
+    .home-page .home-motion-fallback {
+        display: none;
+        position: absolute;
+        inset: 0;
+        align-content: center;
+        justify-items: center;
+        gap: .75rem;
+        margin: 0;
+        padding: 1rem;
+        list-style: none;
+        perspective: 700px;
+    }
+    .home-page .home-motion-fallback li {
+        min-width: 12rem;
+        padding: .8rem 1.2rem;
+        border: 5px solid #fffdf3;
+        border-radius: 1rem;
+        color: white;
+        font-size: .95rem;
+        font-weight: 800;
+        text-align: center;
+        text-transform: uppercase;
+        transform: rotateY(-14deg) rotateZ(-5deg);
+        box-shadow: 0 8px 0 #cbd5c9, 0 14px 22px rgba(25, 62, 37, .16);
+    }
+    .home-page .home-motion-fallback li:nth-child(1) { background: #236b48; }
+    .home-page .home-motion-fallback li:nth-child(2) { background: #bd6337; transform: rotateY(12deg) rotateZ(4deg); }
+    .home-page .home-motion-fallback li:nth-child(3) { background: #235f78; transform: rotateY(-10deg) rotateZ(-2deg); }
+    .home-page .home-motion-scene.is-fallback .home-motion-canvas { display: none; }
+    .home-page .home-motion-scene.is-fallback .home-motion-fallback { display: grid; }
+    @media (max-width: 760px) {
+        .home-page .home-motion { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 2rem 0; }
+        .home-page .home-motion-scene { aspect-ratio: 1.4; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .home-page .home-motion-fallback li { transform: none; }
+    }
 </style>
 
-<section class="home-video" data-home-video data-first-video="{{ homepage_videos.0 }}" data-second-video="{{ homepage_videos.1 }}" aria-label="Community video">
-    <iframe
-        class="home-video-player"
-        data-video-player
-        title="Decorative community video"
-        src="about:blank"
-        loading="eager"
-        tabindex="-1"
-        aria-hidden="true"
-        referrerpolicy="origin"
-        allow="autoplay; encrypted-media">
-    </iframe>
-</section>
-
+<div class="home-page">
 <section class="home-hero" aria-label="Umuganda community work">
     <div class="home-hero-copy">
-        <div class="home-date">{% now "l, F j, Y" %}</div>
-        <h1>Small acts.<br>Stronger communities.</h1>
-        <p>Bring neighbors together to care for our communities. Discover local projects, lend a hand, and help Rwanda thrive.</p>
-        <a class="home-hero-link" href="{% url 'project_list' %}">Explore community projects <span aria-hidden="true">→</span></a>
-    </div>
-    <div class="home-slideshow" data-slideshow role="region" aria-roledescription="carousel" aria-label="Community project highlights">
-        <figure class="home-slide is-active" role="group" aria-roledescription="slide" aria-label="1 of 4">
-            <picture>
-                <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
-                <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Neighbors working together to improve a community pathway" width="1024" height="683" fetchpriority="high" decoding="async">
-            </picture>
-            <figcaption class="home-slide-caption"><span>Working together</span><strong>Cleaner paths, closer communities</strong></figcaption>
-        </figure>
-        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="2 of 4" aria-hidden="true">
-            <picture>
-                <source srcset="{% static 'coordinator/images/umuganda2.webp' %}" type="image/webp">
-                <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="Community members joining efforts on a local project" width="1280" height="720" loading="lazy" decoding="async">
-            </picture>
-            <figcaption class="home-slide-caption"><span>Building together</span><strong>Every helping hand makes a difference</strong></figcaption>
-        </figure>
-        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="3 of 4" aria-hidden="true">
-            <picture>
-                <source srcset="{% static 'coordinator/images/umuganda3.webp' %}" type="image/webp">
-                <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers improving shared neighborhood spaces" width="800" height="533" loading="lazy" decoding="async">
-            </picture>
-            <figcaption class="home-slide-caption"><span>Growing together</span><strong>Shared work, lasting impact</strong></figcaption>
-        </figure>
-        <figure class="home-slide" role="group" aria-roledescription="slide" aria-label="4 of 4" aria-hidden="true">
-            <picture>
-                <source srcset="{% static 'coordinator/images/umuganda4.webp' %}" type="image/webp">
-                <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Volunteers planting trees in their community" width="799" height="533" loading="lazy" decoding="async">
-            </picture>
-            <figcaption class="home-slide-caption"><span>Greener together</span><strong>Planting a better future</strong></figcaption>
-        </figure>
-        <div class="home-slide-controls">
-            <button type="button" class="home-slide-toggle" aria-label="Pause slideshow" aria-pressed="false" data-slide-toggle>Pause</button>
-            <div class="home-slide-dots" role="group" aria-label="Choose a featured image">
-                <button type="button" aria-label="Show image 1" aria-current="true" data-slide-to="0"></button>
-                <button type="button" aria-label="Show image 2" aria-current="false" data-slide-to="1"></button>
-                <button type="button" aria-label="Show image 3" aria-current="false" data-slide-to="2"></button>
-                <button type="button" aria-label="Show image 4" aria-current="false" data-slide-to="3"></button>
-            </div>
-            <div class="home-slide-arrows">
-                <button type="button" class="home-slide-arrow" aria-label="Previous image" data-slide-previous>←</button>
-                <button type="button" class="home-slide-arrow" aria-label="Next image" data-slide-next>→</button>
-            </div>
+        <div class="home-date">Community projects across Rwanda</div>
+        <h1>Organise community work.</h1>
+        <p>Find local projects, join your neighbours, and keep community information in one place.</p>
+        <div class="home-actions">
+            <a class="home-hero-link" href="{% url 'project_list' %}">Find a project</a>
+            <a class="home-secondary-link" href="{% url 'register' %}">Join as a volunteer</a>
         </div>
     </div>
+    <figure class="home-hero-image">
+        <picture>
+            <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
+            <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Neighbours working together to improve a community pathway" width="1024" height="683" fetchpriority="high" decoding="async">
+        </picture>
+        <figcaption>Residents working together on a local community project.</figcaption>
+    </figure>
+</section>
+
+<section class="home-motion" aria-labelledby="home-motion-heading">
+    <div class="home-motion-copy">
+        <p class="home-eyebrow">Umuganda in motion</p>
+        <h2 id="home-motion-heading">Small acts build stronger communities.</h2>
+        <p>Neighbors bring their time and skills together. As you scroll, these community badges turn with the story of shared work across Rwanda.</p>
+    </div>
+    <figure class="home-motion-scene" data-home-motion-scene>
+        <canvas class="home-motion-canvas" aria-hidden="true"></canvas>
+        <ul class="home-motion-fallback" aria-label="Community values">
+            <li>Community-led</li>
+            <li>Stronger together</li>
+            <li>Made for Rwanda</li>
+        </ul>
+        <figcaption class="visually-hidden">Three dimensional badges for community, togetherness, and Rwanda.</figcaption>
+    </figure>
 </section>
 
 <section class="home-section" aria-labelledby="announcements-heading">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div class="home-section-heading">
         <div>
-            <p class="text-uppercase fw-bold small mb-1" style="color: #1c6b41; letter-spacing: .08em;">From communities across Rwanda</p>
-            <h2 id="announcements-heading" class="mb-1">Community announcements</h2>
-            <p class="text-muted mb-0">Notices, local updates, and opportunities shared by approved community leaders.</p>
+            <p class="home-eyebrow">From communities across Rwanda</p>
+            <h2 id="announcements-heading">Community announcements</h2>
         </div>
-        <a href="{% url 'leader_login' %}" class="btn btn-outline-success">Leader? Share an update</a>
+        <div class="announcement-intro">
+            <span class="announcement-intro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13a1 1 0 0 1-1 1H5a2.5 2.5 0 0 1-2.5-2.5V7A2.5 2.5 0 0 1 5 4.5Z" />
+                    <path d="M7 8h10M7 11.5h5M7 15h5" />
+                    <path d="M15 12.5h3v4h-3z" />
+                </svg>
+            </span>
+            <p>Notices, local updates, and opportunities shared by approved community leaders.</p>
+            <a href="{% url 'leader_login' %}" class="announcement-leader-link">Leader sign in</a>
+        </div>
     </div>
     {% if announcements %}
         <div class="announcement-grid">
@@ -315,110 +733,131 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="rounded p-4 text-center" style="background: #f4f8f5;">
-            <h3 class="h5">Local updates will appear here</h3>
-            <p class="text-muted mb-0">Approved community leaders can share notices and opportunities from their dashboards.</p>
+        <div class="home-empty-state">
+            <h3 class="h5">No community updates yet</h3>
+            <p class="mb-0">Approved community leaders can share notices and opportunities from their dashboards.</p>
+        </div>
+    {% endif %}
+    {% if announcement_count > 2 %}
+        <div class="announcement-more-wrap">
+            <a class="announcement-more" href="{% url 'announcement_list' %}">See all announcements</a>
         </div>
     {% endif %}
 </section>
 
-<div class="content" style="background: white; padding: 2rem; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 style="color: #1c6b41; margin-bottom: 1rem;">Welcome to the Umuganda Platform</h2>
-    <p style="margin-bottom: 2rem;">This platform helps Rwandan communities organize their monthly Umuganda activities efficiently.</p>
-    
-    <div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.5rem; margin: 2rem 0;">
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
-            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">📋 Project Tracking</h3>
-            <p>Plan and monitor community projects from start to finish.</p>
+<section class="home-overview" aria-labelledby="how-it-works-heading">
+    <div class="home-section-heading">
+        <div>
+            <p class="home-eyebrow">How it works</p>
+            <h2 id="how-it-works-heading">Local projects, clearly organised</h2>
         </div>
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
-            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">👥 Volunteer Sign-ups</h3>
-            <p>Community members can easily sign up for projects.</p>
-        </div>
-        <div class="feature" style="background: #f0f8ff; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #1c6b41;">
-            <h3 style="color: #1c6b41; margin-bottom: 0.5rem;">📣 Community updates</h3>
-            <p>Read local notices, opportunities, and updates shared separately from project listings.</p>
-        </div>
+        <p class="home-overview-intro">A shared place for residents to find community work and for approved leaders to coordinate it.</p>
     </div>
-
-    <section class="home-section" aria-labelledby="how-it-works-heading">
-        <h2 id="how-it-works-heading">A simple way to work together</h2>
-        <p class="text-muted">The platform connects residents who want to help with the local leaders organizing community work. It brings project information into one place, while keeping announcements distinct from volunteer sign-ups.</p>
-        <div class="how-grid mt-4">
-            <article class="how-card">
-                <h3 class="h5">1. Find work nearby</h3>
-                <p class="mb-0">Browse upcoming projects and narrow results by province, district, sector, cell, village, or date. Project details include the purpose, time, location, and number of volunteers needed.</p>
-            </article>
-            <article class="how-card">
-                <h3 class="h5">2. Join as a volunteer</h3>
-                <p class="mb-0">Create a volunteer account, choose a project, and sign up. Your dashboard keeps your registrations and attendance history together.</p>
-            </article>
-            <article class="how-card">
-                <h3 class="h5">3. Coordinate local work</h3>
-                <p class="mb-0">Approved leaders can publish and update projects for their managed area, and share separate community notices or opportunities with residents.</p>
-            </article>
-            <article class="how-card">
-                <h3 class="h5">4. Keep information current</h3>
-                <p class="mb-0">Leaders can correct or remove their own project details and announcements. Past projects stop appearing in public project listings.</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="home-section" aria-labelledby="platform-purpose-heading">
-        <h2 id="platform-purpose-heading">Built around Rwanda’s community structure</h2>
-        <p>Umuganda is shared community work: people contribute time and effort to improve the places where they live. This platform supports that tradition with a clear place to discover activities, coordinate participation, and communicate local information.</p>
-        <p>Location filters follow the administrative hierarchy—province, district, sector, cell, and village—so residents can look for activities close to home. Leaders describe the area they manage when applying; an administrator must verify and approve leader accounts before they can publish.</p>
-        <p class="mb-0">The platform helps organize information, but it does not replace local authorities or verify real-world appointments automatically. Community leaders remain responsible for keeping the information they publish accurate and current.</p>
-    </section>
-
-    <!-- Photo Gallery -->
-    <div style="margin: 2rem 0;">
-        <h2 style="color: #1c6b41; margin-bottom: 1rem; text-align: center;">See Umuganda in Action</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
-            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <picture>
-                    <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
-                    <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Community building a wall" width="1024" height="683" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
-                </picture>
-                <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Pathway Cleanup</h4>
-                    <p style="margin: 0; font-size: 0.9rem; color: #444;">A cleanup day in a rural sector, improving access for everyone</p>
-                </div>
-            </div>
-            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <picture>
-                    <source srcset="{% static 'coordinator/images/umuganda2.webp' %}" type="image/webp">
-                    <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="People planting trees" width="1280" height="720" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
-                </picture>
-                <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Building Together</h4>
-                    <p style="margin: 0; font-size: 0.9rem; color: #444;">HE Paul Kagame with Volunteers working together to build a community shelter in Kigali.</p>
-                </div>
-            </div>
-            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <picture>
-                    <source srcset="{% static 'coordinator/images/umuganda3.webp' %}" type="image/webp">
-                    <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers clearing a path" width="800" height="533" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
-                </picture>
-                <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Green Community</h4>
-                    <p style="margin: 0; font-size: 0.9rem; color: #444;">Volunteers with recognised security bodies from a local district team up for neighborhood landscaping.</p>
-                </div>
-            </div>
-            <div style="background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <picture>
-                    <source srcset="{% static 'coordinator/images/umuganda4.webp' %}" type="image/webp">
-                    <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Team of volunteers planting" width="799" height="533" loading="lazy" decoding="async" style="width: 100%; height: 180px; object-fit: cover;">
-                </picture>
-                <div style="padding: 1rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #1c6b41;">Tree Planting</h4>
-                    <p style="margin: 0; font-size: 0.9rem; color: #444;">Community members planting trees to green their neighborhood in the Eastern Province.</p>
-                </div>
-            </div>
-        </div>
+    <div class="features">
+        <article class="feature">
+            <h3>Find a project</h3>
+            <p>Browse upcoming work by location or date and see where volunteers are needed.</p>
+            <a href="{% url 'project_list' %}">Browse projects</a>
+        </article>
+        <article class="feature">
+            <h3>Take part</h3>
+            <p>Register for local activities and keep your participation history together.</p>
+            <a href="{% url 'register' %}">Create a volunteer account</a>
+        </article>
+        <article class="feature">
+            <h3>Coordinate local work</h3>
+            <p>Approved community leaders can publish projects and share timely updates.</p>
+            <a href="{% url 'leader_login' %}">Leader sign in</a>
+        </article>
     </div>
+</section>
 
-</div>
+<section class="home-section" id="journal" aria-labelledby="journal-heading">
+    <div class="home-section-heading">
+        <div>
+            <p class="home-eyebrow">Community work in action</p>
+            <h2 id="journal-heading">People working together</h2>
+        </div>
+        <p>Past activities, told by the communities who made them happen.</p>
+    </div>
+    <div class="journal-archive-grid" aria-label="Community activity photo journal">
+        <figure class="journal-archive-card">
+            {% if journal_photo_stories.pathway %}<a class="journal-archive-link" href="{% url 'journal_detail' journal_photo_stories.pathway.slug %}">{% endif %}
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda1.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda1.jpg' %}" alt="Community members improving a shared pathway" width="1024" height="683" loading="lazy" decoding="async">
+            </picture>
+            {% if journal_photo_stories.pathway %}</a>{% endif %}
+            <figcaption>{% if journal_photo_stories.pathway %}<a class="journal-archive-caption-link" href="{% url 'journal_detail' journal_photo_stories.pathway.slug %}">Pathway improvements</a>{% else %}Pathway improvements{% endif %}</figcaption>
+        </figure>
+        <figure class="journal-archive-card">
+            {% if journal_photo_stories.building %}<a class="journal-archive-link" href="{% url 'journal_detail' journal_photo_stories.building.slug %}">{% endif %}
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda2.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda2.jpg' %}" alt="Community members working together on a shared project" width="1280" height="720" loading="lazy" decoding="async">
+            </picture>
+            {% if journal_photo_stories.building %}</a>{% endif %}
+            <figcaption>{% if journal_photo_stories.building %}<a class="journal-archive-caption-link" href="{% url 'journal_detail' journal_photo_stories.building.slug %}">Building together</a>{% else %}Building together{% endif %}</figcaption>
+        </figure>
+        <figure class="journal-archive-card">
+            {% if journal_photo_stories.greening %}<a class="journal-archive-link" href="{% url 'journal_detail' journal_photo_stories.greening.slug %}">{% endif %}
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda3.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda3.jpg' %}" alt="Volunteers improving a shared neighbourhood space" width="800" height="533" loading="lazy" decoding="async">
+            </picture>
+            {% if journal_photo_stories.greening %}</a>{% endif %}
+            <figcaption>{% if journal_photo_stories.greening %}<a class="journal-archive-caption-link" href="{% url 'journal_detail' journal_photo_stories.greening.slug %}">Greener communities</a>{% else %}Greener communities{% endif %}</figcaption>
+        </figure>
+        <figure class="journal-archive-card">
+            {% if journal_photo_stories.tree_planting %}<a class="journal-archive-link" href="{% url 'journal_detail' journal_photo_stories.tree_planting.slug %}">{% endif %}
+            <picture>
+                <source srcset="{% static 'coordinator/images/umuganda4.webp' %}" type="image/webp">
+                <img src="{% static 'coordinator/images/umuganda4.jpg' %}" alt="Volunteers planting trees in their community" width="799" height="533" loading="lazy" decoding="async">
+            </picture>
+            {% if journal_photo_stories.tree_planting %}</a>{% endif %}
+            <figcaption>{% if journal_photo_stories.tree_planting %}<a class="journal-archive-caption-link" href="{% url 'journal_detail' journal_photo_stories.tree_planting.slug %}">Tree planting</a>{% else %}Tree planting{% endif %}</figcaption>
+        </figure>
+    </div>
+</section>
+
+<section class="home-section" id="journal-stories" aria-labelledby="journal-stories-heading">
+    <div class="home-section-heading">
+        <div>
+            <p class="home-eyebrow">Stories from past activities</p>
+            <h2 id="journal-stories-heading">Read the full journals</h2>
+        </div>
+        <p>Open a journal for the activity details, full story, and community comments.</p>
+    </div>
+    {% if journal_story_cards %}
+        <div class="journal-grid">
+            {% for journal in journal_story_cards %}
+                <article class="journal-card">
+                    <a class="journal-card-link" href="{% url 'journal_detail' journal.slug %}">
+                        <div class="journal-card-image">
+                            <img src="{{ journal.cover_image.url }}" alt="Photo from {{ journal.title }}" width="900" height="700" loading="lazy" decoding="async">
+                            <time class="journal-card-date" datetime="{{ journal.activity_date|date:'Y-m-d' }}">{{ journal.activity_date|date:"M j, Y" }}</time>
+                        </div>
+                        <div class="journal-card-copy">
+                            <p class="journal-card-location">{{ journal.location }}{% if journal.organizer %} · {{ journal.organizer }}{% endif %}</p>
+                            <h3>{{ journal.title }}</h3>
+                            <p class="journal-card-summary">{{ journal.summary }}</p>
+                            <span class="journal-card-action">Read the full story</span>
+                        </div>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    {% elif journals %}
+        <p class="journal-empty">Open one of the activity photos above to read its full story.</p>
+    {% else %}
+        <p class="journal-empty">Stories of past Umuganda activities will appear here.</p>
+    {% endif %}
+    {% if journal_count > 4 %}
+        <div class="journal-see-more-wrap">
+            <a class="journal-see-more" href="{% url 'journal_list' %}">See all journals</a>
+        </div>
+    {% endif %}
+</section>
 
 <section class="home-section" aria-labelledby="community-stories-heading">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
@@ -447,159 +886,15 @@
 </section>
 
 <section class="home-cta" aria-labelledby="home-cta-heading">
-    <h2 id="home-cta-heading">Ready to make a difference?</h2>
-    <p>Whether you are looking for a way to help or organizing work for your community, take the next step and bring more neighbors together.</p>
-    <a href="{% url 'project_list' %}" class="btn btn-light">Explore upcoming projects</a>
-    <a href="{% url 'register' %}" class="btn btn-outline-light">Join as a volunteer</a>
-    <a href="{% url 'leader_login' %}" class="btn btn-outline-light">Leader sign in</a>
+    <h2 id="home-cta-heading">Get involved in your community</h2>
+    <p>Find an upcoming project or create an account to take part in local work.</p>
+    <a href="{% url 'project_list' %}" class="btn btn-light">Explore projects</a>
+    <a href="{% url 'register' %}" class="btn btn-outline-light">Register as a volunteer</a>
 </section>
+</div>
 {% endblock %}
 
 {% block scripts %}
 {{ block.super }}
-<script>
-    (() => {
-        const slideshow = document.querySelector("[data-slideshow]");
-        const videoSection = document.querySelector("[data-home-video]");
-        if (videoSection) {
-            const playerContainer = videoSection.querySelector("[data-video-player]");
-            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            const firstVideo = videoSection.dataset.firstVideo;
-            const secondVideo = videoSection.dataset.secondVideo;
-            const playerParams = new URLSearchParams({
-                autoplay: "0",
-                cc_load_policy: "0",
-                controls: "0",
-                disablekb: "1",
-                enablejsapi: "1",
-                iv_load_policy: "3",
-                mute: "1",
-                playsinline: "1",
-                rel: "0",
-                origin: window.location.origin,
-            });
-            playerContainer.src = `https://www.youtube.com/embed/${encodeURIComponent(firstVideo)}?${playerParams}`;
-
-            const loadPlayerApi = () => new Promise((resolve) => {
-                if (window.YT && window.YT.Player) {
-                    resolve(window.YT);
-                    return;
-                }
-                const previousCallback = window.onYouTubeIframeAPIReady;
-                window.onYouTubeIframeAPIReady = () => {
-                    if (typeof previousCallback === "function") previousCallback();
-                    resolve(window.YT);
-                };
-                const script = document.createElement("script");
-                script.src = "https://www.youtube.com/iframe_api";
-                script.async = true;
-                document.head.append(script);
-            });
-
-            loadPlayerApi().then((YT) => {
-                let secondVideoStarted = false;
-                new YT.Player(playerContainer, {
-                    events: {
-                        onReady(event) {
-                            event.target.mute();
-                            if (!reducedMotion) event.target.playVideo();
-                        },
-                        onStateChange(event) {
-                            if (event.data === YT.PlayerState.ENDED && !secondVideoStarted) {
-                                secondVideoStarted = true;
-                                event.target.loadVideoById(secondVideo);
-                                event.target.mute();
-                            }
-                        },
-                        onError(event) {
-                            console.error("The homepage video could not be played.", event.data);
-                            playerContainer.remove();
-                        },
-                    },
-                });
-            });
-        }
-
-        if (!slideshow) return;
-
-        const slides = [...slideshow.querySelectorAll(".home-slide")];
-        const dots = [...slideshow.querySelectorAll("[data-slide-to]")];
-        const toggle = slideshow.querySelector("[data-slide-toggle]");
-        let activeIndex = 0;
-        let timer;
-        let manuallyPaused = false;
-        let pointerInside = false;
-        let focusInside = false;
-
-        const showSlide = (index) => {
-            activeIndex = (index + slides.length) % slides.length;
-            slides.forEach((slide, i) => {
-                slide.classList.toggle("is-active", i === activeIndex);
-                slide.setAttribute("aria-hidden", i === activeIndex ? "false" : "true");
-                slide.setAttribute("aria-label", `${i + 1} of ${slides.length}`);
-            });
-            dots.forEach((dot, i) => dot.setAttribute("aria-current", i === activeIndex ? "true" : "false"));
-        };
-        const stopTimer = () => window.clearInterval(timer);
-        const startTimer = () => {
-            stopTimer();
-            if (
-                !manuallyPaused &&
-                !pointerInside &&
-                !focusInside &&
-                !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ) {
-                timer = window.setInterval(() => showSlide(activeIndex + 1), 6000);
-            }
-        };
-
-        toggle.addEventListener("click", () => {
-            manuallyPaused = !manuallyPaused;
-            toggle.setAttribute("aria-pressed", String(manuallyPaused));
-            toggle.setAttribute(
-                "aria-label",
-                manuallyPaused ? "Resume slideshow" : "Pause slideshow"
-            );
-            toggle.textContent = manuallyPaused ? "Resume" : "Pause";
-            startTimer();
-        });
-        dots.forEach((dot) => dot.addEventListener("click", () => {
-            showSlide(Number(dot.dataset.slideTo));
-            startTimer();
-        }));
-        slideshow.querySelector("[data-slide-previous]").addEventListener("click", () => {
-            showSlide(activeIndex - 1);
-            startTimer();
-        });
-        slideshow.querySelector("[data-slide-next]").addEventListener("click", () => {
-            showSlide(activeIndex + 1);
-            startTimer();
-        });
-        slideshow.addEventListener("mouseenter", () => {
-            pointerInside = true;
-            stopTimer();
-        });
-        slideshow.addEventListener("mouseleave", () => {
-            pointerInside = false;
-            startTimer();
-        });
-        slideshow.addEventListener("focusin", () => {
-            focusInside = true;
-            stopTimer();
-        });
-        slideshow.addEventListener("focusout", (event) => {
-            if (!slideshow.contains(event.relatedTarget)) {
-                focusInside = false;
-                startTimer();
-            }
-        });
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden) stopTimer();
-            else startTimer();
-        });
-
-        showSlide(0);
-        startTimer();
-    })();
-</script>
+<script type="module" src="{% static 'coordinator/js/home_stickers.js' %}"></script>
 {% endblock %}

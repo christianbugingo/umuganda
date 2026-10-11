@@ -74,7 +74,12 @@
         }
         
         .footer .container {
-            padding: 3rem 0 1rem;
+            padding: 3rem 1rem 1rem;
+        }
+
+        .footer-bottom .container {
+            margin: 0 auto;
+            padding: 0 1rem;
         }
         
         .footer h5 {
@@ -179,6 +184,71 @@
         :focus-visible {
             outline: 3px solid #173d27;
             outline-offset: 3px;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+
+            .navbar-brand {
+                min-width: 0;
+                gap: 0.5rem;
+                margin-right: 0.5rem;
+                font-size: 1.2rem;
+            }
+
+            .navbar-brand img {
+                width: 2.25rem;
+                height: 2.25rem;
+                flex-shrink: 0;
+            }
+
+            .navbar-toggler {
+                flex-shrink: 0;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 0.65rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 0.625rem 0.5rem;
+            }
+
+            .navbar .container-fluid {
+                padding-right: 0.5rem;
+                padding-left: 0.5rem;
+            }
+
+            .navbar-brand {
+                gap: 0.4rem;
+                font-size: 1rem;
+            }
+
+            .navbar-brand img {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            .footer {
+                margin-top: 2.5rem;
+            }
+
+            .footer > .container {
+                padding-top: 2rem;
+            }
+
+            .footer h5 {
+                margin-bottom: 0.75rem;
+            }
+
+            .footer-bottom .row > div + div {
+                margin-top: 0.5rem;
+                text-align: left;
+            }
         }
     </style>
 </head>

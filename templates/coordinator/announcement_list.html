@@ -1,0 +1,182 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}Community Announcements - Umuganda Coordinator{% endblock %}
+
+{% block content %}
+<style>
+    .announcement-page {
+        --announcement-forest: #1c6b41;
+        --announcement-ink: #202a24;
+        --announcement-muted: #58665d;
+        --announcement-line: #d7dfd9;
+        max-width: 960px;
+        margin: 0 auto;
+        color: var(--announcement-ink);
+    }
+    .announcement-page-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 1rem 2rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--announcement-line);
+    }
+    .announcement-page-kicker {
+        margin: 0 0 .35rem;
+        color: #8d4c2c;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .announcement-page h1 {
+        margin: 0;
+        color: var(--announcement-ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 2.35rem;
+        font-weight: 500;
+        line-height: 1.15;
+    }
+    .announcement-page-intro {
+        max-width: 37rem;
+        margin: .6rem 0 0;
+        color: var(--announcement-muted);
+    }
+    .announcement-home-link {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: .5rem;
+        color: var(--announcement-forest);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .announcement-home-link:focus-visible,
+    .announcement-page-pagination a:focus-visible { outline: 3px solid #bd6337; outline-offset: 3px; }
+    .announcement-archive-list { display: grid; gap: 1rem; }
+    .announcement-archive-card {
+        min-width: 0;
+        padding: 1.15rem;
+        border: 1px solid var(--announcement-line);
+        border-left: 3px solid var(--announcement-forest);
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(28, 55, 37, .05);
+    }
+    .announcement-archive-card[data-category="notice"] { border-left-color: #bd6337; }
+    .announcement-archive-card[data-category="opportunity"] { border-left-color: #246a83; }
+    .announcement-archive-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem .75rem;
+        margin-bottom: .7rem;
+        color: var(--announcement-muted);
+        font-size: .85rem;
+    }
+    .announcement-category {
+        display: inline-flex;
+        min-height: 1.55rem;
+        align-items: center;
+        padding: .2rem .5rem;
+        background: #edf4ee;
+        color: var(--announcement-forest);
+        font-size: .75rem;
+        font-weight: 750;
+        text-transform: uppercase;
+    }
+    .announcement-archive-card[data-category="notice"] .announcement-category { background: #fbefe8; color: #8d4c2c; }
+    .announcement-archive-card[data-category="opportunity"] .announcement-category { background: #eaf3f6; color: #235f78; }
+    .announcement-archive-card h2 {
+        margin: 0 0 .55rem;
+        color: var(--announcement-ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.4rem;
+        font-weight: 500;
+        line-height: 1.25;
+    }
+    .announcement-archive-area { margin: 0 0 .55rem; color: var(--announcement-muted); font-size: .9rem; font-weight: 650; }
+    .announcement-archive-body { margin: 0 0 .8rem; color: #34453a; line-height: 1.7; overflow-wrap: anywhere; }
+    .announcement-archive-byline { margin: 0; color: var(--announcement-muted); font-size: .82rem; }
+    .announcement-archive-empty { padding: 1.5rem; border: 1px solid var(--announcement-line); background: #f5f8f5; color: var(--announcement-muted); }
+    .announcement-archive-empty h2 { margin: 0 0 .5rem; color: var(--announcement-ink); font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; }
+    .announcement-page-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--announcement-line);
+    }
+    .announcement-page-pagination a {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .6rem .9rem;
+        border: 1px solid var(--announcement-forest);
+        background: var(--announcement-forest);
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .announcement-page-pagination a:hover { background: #155333; color: #fff; }
+    .announcement-page-pagination span { color: var(--announcement-muted); font-size: .9rem; }
+    @media (max-width: 480px) {
+        .announcement-page h1 { font-size: 1.85rem; }
+        .announcement-archive-card { padding: .95rem; }
+        .announcement-page-pagination { align-items: stretch; }
+        .announcement-page-pagination a { flex: 1 1 40%; }
+        .announcement-page-pagination span { flex: 1 0 100%; order: -1; text-align: center; }
+    }
+</style>
+
+<div class="announcement-page">
+    <header class="announcement-page-header">
+        <div>
+            <p class="announcement-page-kicker">From communities across Rwanda</p>
+            <h1>Community announcements</h1>
+            <p class="announcement-page-intro">Notices, local updates, and opportunities shared by approved community leaders.</p>
+        </div>
+        <a class="announcement-home-link" href="{% url 'home' %}#announcements-heading"><span aria-hidden="true">&larr;</span> Back to home</a>
+    </header>
+
+    {% if announcements %}
+        <div class="announcement-archive-list">
+            {% for announcement in announcements %}
+                <article class="announcement-archive-card" data-category="{{ announcement.category }}">
+                    <div class="announcement-archive-meta">
+                        <span class="announcement-category">{{ announcement.get_category_display }}</span>
+                        <time datetime="{{ announcement.created_at|date:'c' }}">{{ announcement.created_at|date:"M j, Y" }}</time>
+                    </div>
+                    <h2>{{ announcement.title }}</h2>
+                    {% if announcement.area %}<p class="announcement-archive-area">{{ announcement.area }}</p>{% endif %}
+                    <div class="announcement-archive-body">{{ announcement.body|linebreaks }}</div>
+                    <p class="announcement-archive-byline">Shared by {{ announcement.created_by.get_full_name|default:announcement.created_by.username }}</p>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="announcement-page-pagination" aria-label="Announcement pages">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}"><span aria-hidden="true">&larr;</span> Newer announcements</a>
+                {% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Older announcements <span aria-hidden="true">&rarr;</span></a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="announcement-archive-empty">
+            <h2>No community updates yet</h2>
+            <p>Approved community leaders can share notices and opportunities from their dashboards.</p>
+            <a href="{% url 'home' %}#announcements-heading">Return to home</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

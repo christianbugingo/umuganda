@@ -6,6 +6,9 @@ from django.utils.html import format_html
 from .models import (
     Announcement,
     Community,
+    JournalComment,
+    JournalPhoto,
+    UmugandaJournal,
     Participation,
     UmugandaProject,
     UserProfile,
@@ -132,6 +135,42 @@ class TestimonialAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
+class JournalPhotoInline(admin.TabularInline):
+    model = JournalPhoto
+    extra = 0
+
+
+class UmugandaJournalAdmin(admin.ModelAdmin):
+    list_display = ('title', 'activity_date', 'location', 'organizer', 'is_published')
+    list_filter = ('is_published', 'activity_date')
+    search_fields = ('title', 'summary', 'description', 'location', 'organizer')
+    readonly_fields = ('slug', 'created_at', 'updated_at')
+    date_hierarchy = 'activity_date'
+    inlines = (JournalPhotoInline,)
+    fieldsets = (
+        ('Activity details', {
+            'fields': (
+                'title', 'slug', 'activity_date', 'location', 'organizer',
+                'homepage_photo',
+            ),
+        }),
+        ('Story', {
+            'fields': ('summary', 'description', 'cover_image'),
+        }),
+        ('Publication', {
+            'fields': ('is_published', 'created_at', 'updated_at'),
+        }),
+    )
+
+
+class JournalCommentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'journal', 'created_at', 'is_approved')
+    list_filter = ('is_approved', 'created_at')
+    list_editable = ('is_approved',)
+    search_fields = ('name', 'body', 'journal__title')
+    readonly_fields = ('created_at',)
+
+
 admin.site.register(Community, CommunityAdmin)
 admin.site.register(UmugandaProject, UmugandaProjectAdmin)
 admin.site.register(Volunteer, VolunteerAdmin)
@@ -139,6 +178,8 @@ admin.site.register(Participation, ParticipationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Announcement, AnnouncementAdmin)
 admin.site.register(Testimonial, TestimonialAdmin)
+admin.site.register(UmugandaJournal, UmugandaJournalAdmin)
+admin.site.register(JournalComment, JournalCommentAdmin)
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 

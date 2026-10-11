@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 
 class Community(models.Model):
     # Rwandan Administrative Structure
@@ -142,6 +143,92 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return self.attribution
+
+
+class UmugandaJournal(models.Model):
+    HOMEPAGE_PHOTO_CHOICES = [
+        ('pathway', 'Pathway improvements'),
+        ('building', 'Building together'),
+        ('greening', 'Greener communities'),
+        ('tree_planting', 'Tree planting'),
+    ]
+
+    title = models.CharField(max_length=180)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    activity_date = models.DateField()
+    location = models.CharField(max_length=200)
+    organizer = models.CharField(max_length=160, blank=True)
+    summary = models.CharField(max_length=300)
+    description = models.TextField()
+    cover_image = models.ImageField(upload_to='journals/covers/')
+    homepage_photo = models.CharField(
+        max_length=20,
+        choices=HOMEPAGE_PHOTO_CHOICES,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='Optional. Connect this story to one of the four homepage activity photos.',
+    )
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-activity_date', '-id')
+        indexes = [models.Index(fields=('is_published', '-activity_date'))]
+        verbose_name = 'Umuganda journal'
+        verbose_name_plural = 'Umuganda journals'
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or 'umuganda-journal'
+            candidate = base_slug
+            suffix = 2
+            while type(self).objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                candidate = f'{base_slug}-{suffix}'
+                suffix += 1
+            self.slug = candidate
+        super().save(*args, **kwargs)
+
+
+class JournalPhoto(models.Model):
+    journal = models.ForeignKey(
+        UmugandaJournal,
+        on_delete=models.CASCADE,
+        related_name='photos',
+    )
+    image = models.ImageField(upload_to='journals/photos/')
+    caption = models.CharField(max_length=180, blank=True)
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ('position', 'id')
+
+    def __str__(self):
+        return self.caption or f'Photo for {self.journal.title}'
+
+
+class JournalComment(models.Model):
+    journal = models.ForeignKey(
+        UmugandaJournal,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    name = models.CharField(max_length=80)
+    body = models.TextField(max_length=2000)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at', 'id')
+        verbose_name = 'journal comment'
+        verbose_name_plural = 'journal comments'
+
+    def __str__(self):
+        return f'Comment by {self.name} on {self.journal.title}'
 
 
 class Volunteer(models.Model):

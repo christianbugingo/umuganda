@@ -147,6 +147,23 @@ Use the free deployment for a disposable preview only; never enter data you need
 keep. The app remains on SQLite; keep it on one Render instance and do not enable
 multiple instances.
 
+##### Create a preview admin without Render Shell
+
+Render Shell is unavailable on the Free plan. To create a disposable test admin,
+set these environment variables for the web service in the Render Dashboard:
+
+- `DJANGO_SUPERUSER_USERNAME`
+- `DJANGO_SUPERUSER_EMAIL`
+- `DJANGO_SUPERUSER_PASSWORD` (enter it as a secret; never commit it)
+
+After deploying this version, the start command runs
+`python manage.py create_superuser_from_env` after migrations. It creates the named
+superuser only when no account with that username exists; it does not print or reset
+the password. Remove the three environment variables after creating the test admin.
+If the Free service loses its SQLite database on a restart or spin-down, set the
+variables again to recreate the admin. Use only throwaway accounts and test data on
+this ephemeral service; do not enter real volunteer or leader information.
+
 #### Keep SQLite and uploads on a Render persistent disk
 
 Persistent disks require a paid Render web-service plan and incur additional disk
@@ -216,3 +233,28 @@ Add a quote and attribution only after the contributor has agreed to publication
 **Consent confirmed**, then mark **Is published**. The homepage randomly rotates up to
 three from the most recently added consented, published testimonials; no sample or
 fabricated testimonials are displayed when there are no approved entries.
+
+### Umuganda journals
+
+Staff can add past activities in Django admin under **Umuganda journals**. Enter the
+activity title, date, location, organizer (optional), a short summary, the full story,
+and a cover photo. Add supporting pictures in the **Journal photos** inline section;
+captions are optional. Optionally select one **Homepage photo** to make the matching
+existing activity photo link to this full story. Each homepage photo can be assigned
+to only one journal. Save the entry as a draft while reviewing it, then select
+**Is published** to make it visible. Published stories without a homepage-photo
+assignment appear in a separate journal-card section. Every story page includes the
+activity details, photos, related journals, and comments. The homepage shows up to
+four recent journal cards and links to the full `/journals/` archive when there are
+more than four published entries. The archive shows twelve entries per page.
+
+Public comments do not require an account or collect email addresses. New comments are
+held for review. Staff can approve them under **Journal comments** in Django admin;
+only approved comments appear publicly.
+
+Journal photos are served from `/media/journals/`. On Render, set
+`DJANGO_MEDIA_ROOT` to the media directory on a persistent disk before uploading
+stories. SQLite and media on the current free, ephemeral deployment can disappear
+after a restart or redeploy; see **Keep SQLite and uploads on a Render persistent
+disk** above. Uploaded profile-photo URLs still need a separate production media
+serving setup.

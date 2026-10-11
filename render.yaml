@@ -2,8 +2,9 @@ services:
   - type: web
     name: umuganda
     env: python
+    autoDeployTrigger: 'off'
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && python -m waitress --url-scheme=https --port=$PORT umuganda.wsgi:application
+    startCommand: python manage.py migrate --noinput && python manage.py create_superuser_from_env && python -m waitress --url-scheme=https --port=$PORT umuganda.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true

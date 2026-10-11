@@ -1,17 +1,24 @@
 from datetime import timedelta
 from io import BytesIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 
 from coordinator.models import (
     Announcement,
     Community,
+    JournalComment,
+    JournalPhoto,
     Participation,
     UmugandaProject,
+    UmugandaJournal,
     UserProfile,
     Volunteer,
     Testimonial,
@@ -19,32 +26,29 @@ from coordinator.models import (
 
 
 class HomePageTests(TestCase):
-    def test_homepage_shows_date_logo_and_slideshow(self):
+    def test_homepage_shows_clear_actions_and_journal_section(self):
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Small acts.")
-        self.assertContains(response, timezone.localdate().strftime("%A, %B"))
+        self.assertContains(response, "Organise community work.")
         self.assertContains(response, "coordinator/images/umuganda-logo.svg")
-        self.assertContains(response, 'data-slideshow')
-        self.assertContains(response, 'data-slide-next')
+        self.assertContains(response, "Find a project")
+        self.assertContains(response, "Join as a volunteer")
+        self.assertContains(response, "home-hero-image")
+        self.assertContains(response, 'id="journal"')
+        self.assertContains(response, "People working together")
+        self.assertContains(response, "coordinator/images/umuganda1.jpg")
+        self.assertContains(response, "coordinator/images/umuganda2.jpg")
+        self.assertContains(response, "coordinator/images/umuganda3.jpg")
         self.assertContains(response, "coordinator/images/umuganda4.jpg")
-        self.assertContains(response, 'data-first-video="40FMZIaGR-k"')
-        self.assertContains(response, 'data-second-video="5FVO3IHwIzw"')
-        self.assertContains(response, 'referrerpolicy="origin"')
-        self.assertContains(response, "height: clamp(210px, 30vh, 320px)")
-        self.assertContains(response, "width: max(100vw, calc(clamp(210px, 30vh, 320px) * 16 / 9))")
-        self.assertContains(response, "enablejsapi: \"1\"")
-        self.assertContains(response, 'mute: "1"')
-        self.assertContains(response, "origin: window.location.origin")
-        self.assertContains(response, "event.target.mute()")
-        self.assertContains(response, "event.target.loadVideoById(secondVideo)")
+        self.assertContains(response, "journal-archive-grid")
+        self.assertContains(response, "announcement-leader-link")
+        self.assertContains(response, "Stories of past Umuganda activities will appear here.")
+        self.assertNotContains(response, "youtube.com")
+        self.assertNotContains(response, "data-video-player")
         self.assertNotContains(response, "Watch on YouTube")
-        self.assertNotContains(response, "Video 1")
-        self.assertNotContains(response, "Video 2")
-        self.assertNotContains(response, "data-video-id=")
 
-    def test_homepage_randomly_selects_only_active_announcements_and_consented_testimonials(self):
+    def test_homepage_shows_two_latest_active_announcements_and_consented_testimonials(self):
         leader = User.objects.create_user(
             username="homeleader",
             password="StrongPass123!",
@@ -83,12 +87,267 @@ class HomePageTests(TestCase):
 
         shown_announcements = list(response.context["announcements"])
         shown_testimonials = list(response.context["testimonials"])
-        self.assertEqual(len(shown_announcements), 3)
-        self.assertTrue(set(shown_announcements).issubset(set(announcements)))
+        self.assertEqual(len(shown_announcements), 2)
+        self.assertEqual(shown_announcements, list(reversed(announcements[-2:])))
         self.assertEqual(len(shown_testimonials), 3)
         self.assertTrue(set(shown_testimonials).issubset(set(testimonials)))
         self.assertContains(response, "Community announcements")
         self.assertContains(response, "Community stories")
+        self.assertContains(response, reverse('announcement_list'))
+
+
+class AnnouncementArchiveTests(TestCase):
+    def setUp(self):
+        self.leader = User.objects.create_user(
+            username='archiveleader',
+            password='StrongPass123!',
+        )
+
+    def create_announcement(self, title, **kwargs):
+        return Announcement.objects.create(
+            title=title,
+            body=f'{title} details.',
+            created_by=self.leader,
+            **kwargs,
+        )
+
+    def test_archive_paginates_active_published_announcements_newest_first(self):
+        announcements = [
+            self.create_announcement(f'Archive notice {index}')
+            for index in range(12)
+        ]
+        self.create_announcement(
+            'Expired archive notice',
+            expires_at=timezone.localdate() - timedelta(days=1),
+        )
+        self.create_announcement('Unpublished archive notice', is_published=False)
+
+        first_page = self.client.get(reverse('announcement_list'))
+        second_page = self.client.get(reverse('announcement_list'), {'page': 2})
+
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(first_page.context['page_obj'].paginator.count, 12)
+        self.assertEqual(len(first_page.context['announcements']), 10)
+        self.assertEqual(first_page.context['announcements'][0], announcements[-1])
+        self.assertContains(first_page, 'Older announcements')
+        self.assertNotContains(first_page, 'Expired archive notice')
+        self.assertNotContains(first_page, 'Unpublished archive notice')
+        self.assertEqual(len(second_page.context['announcements']), 2)
+        self.assertContains(second_page, 'Newer announcements')
+
+    def test_archive_is_not_added_to_the_main_navigation(self):
+        response = self.client.get(reverse('home'))
+
+        self.assertNotContains(response, 'class="nav-link" href="/announcements/"')
+
+
+class SuperuserBootstrapTests(TestCase):
+    @patch.dict('os.environ', {
+        'DJANGO_SUPERUSER_USERNAME': 'bootstrap-admin',
+        'DJANGO_SUPERUSER_EMAIL': 'bootstrap@example.com',
+        'DJANGO_SUPERUSER_PASSWORD': 'test-only-password-123',
+    })
+    def test_creates_superuser_from_environment_without_overwriting_existing_password(self):
+        call_command('create_superuser_from_env')
+        user = User.objects.get(username='bootstrap-admin')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.check_password('test-only-password-123'))
+
+        with patch.dict('os.environ', {
+            'DJANGO_SUPERUSER_USERNAME': 'bootstrap-admin',
+            'DJANGO_SUPERUSER_EMAIL': 'bootstrap@example.com',
+            'DJANGO_SUPERUSER_PASSWORD': 'different-test-password-456',
+        }):
+            call_command('create_superuser_from_env')
+
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('test-only-password-123'))
+        self.assertFalse(user.check_password('different-test-password-456'))
+
+    def test_rejects_partial_environment_credentials(self):
+        with patch.dict('os.environ', {
+            'DJANGO_SUPERUSER_USERNAME': 'bootstrap-admin',
+            'DJANGO_SUPERUSER_EMAIL': 'bootstrap@example.com',
+        }):
+            with self.assertRaises(CommandError):
+                call_command('create_superuser_from_env')
+
+    def test_skips_when_environment_credentials_are_not_configured(self):
+        with patch.dict('os.environ', {}, clear=True):
+            call_command('create_superuser_from_env')
+
+        self.assertFalse(User.objects.filter(username='bootstrap-admin').exists())
+
+
+def uploaded_journal_image(name='journal-cover.png'):
+    image_bytes = BytesIO()
+    Image.new('RGB', (16, 12), color='green').save(image_bytes, format='PNG')
+    return SimpleUploadedFile(
+        name,
+        image_bytes.getvalue(),
+        content_type='image/png',
+    )
+
+
+class JournalPageTests(TestCase):
+    def tearDown(self):
+        for photo in JournalPhoto.objects.all():
+            photo.image.delete(save=False)
+        for journal in UmugandaJournal.objects.all():
+            journal.cover_image.delete(save=False)
+        super().tearDown()
+
+    def create_journal(
+        self,
+        title='Community pathway restored',
+        published=True,
+        days_ago=1,
+        homepage_photo=None,
+    ):
+        return UmugandaJournal.objects.create(
+            title=title,
+            activity_date=timezone.localdate() - timedelta(days=days_ago),
+            location='Kacyiru, Kigali',
+            organizer='Kacyiru community volunteers',
+            summary='Neighbors repaired a shared pathway together.',
+            description='Residents cleared the path and improved drainage.',
+            cover_image=uploaded_journal_image(f'{title.lower().replace(" ", "-")}.png'),
+            homepage_photo=homepage_photo,
+            is_published=published,
+        )
+
+    def test_homepage_shows_latest_four_published_journals(self):
+        journals = [
+            self.create_journal(f'Journal {index}', days_ago=index)
+            for index in range(5)
+        ]
+        self.create_journal('Draft journal', published=False)
+
+        response = self.client.get('/')
+
+        shown_journals = list(response.context['journals'])
+        self.assertEqual(len(shown_journals), 4)
+        self.assertNotIn('Draft journal', [journal.title for journal in shown_journals])
+        self.assertEqual(shown_journals[0], journals[0])
+        self.assertContains(response, reverse('journal_detail', args=[journals[0].slug]))
+        self.assertContains(response, reverse('journal_list'))
+        self.assertContains(response, 'See all journals')
+
+    def test_homepage_shows_journal_archive_link_only_above_four(self):
+        for index in range(4):
+            self.create_journal(f'Journal {index}')
+
+        four_journals = self.client.get('/')
+        self.assertNotContains(four_journals, 'class="journal-see-more"')
+
+        self.create_journal('Fifth journal')
+        five_journals = self.client.get('/')
+        self.assertContains(five_journals, 'class="journal-see-more"')
+
+    def test_journal_archive_lists_all_published_journals_in_pages_of_twelve(self):
+        journals = [
+            self.create_journal(f'Journal {index}', days_ago=index)
+            for index in range(13)
+        ]
+        self.create_journal('Draft journal', published=False)
+
+        first_page = self.client.get(reverse('journal_list'))
+        second_page = self.client.get(reverse('journal_list'), {'page': 2})
+
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(first_page.context['page_obj'].paginator.count, 13)
+        self.assertEqual(len(first_page.context['journals']), 12)
+        self.assertEqual(first_page.context['journals'][0], journals[0])
+        self.assertContains(first_page, 'Older journals')
+        self.assertNotContains(first_page, 'Draft journal')
+        self.assertEqual(len(second_page.context['journals']), 1)
+        self.assertEqual(second_page.context['journals'][0], journals[-1])
+        self.assertContains(second_page, 'Newer journals')
+
+    def test_published_journal_can_link_an_original_homepage_photo(self):
+        journal = self.create_journal(homepage_photo='pathway')
+
+        response = self.client.get('/')
+
+        self.assertContains(response, 'class="journal-archive-link"')
+        self.assertContains(response, reverse('journal_detail', args=[journal.slug]))
+        self.assertContains(response, 'alt="Community members improving a shared pathway"')
+        self.assertContains(response, 'Open one of the activity photos above to read its full story.')
+
+    def test_journal_detail_shows_activity_photos_and_approved_comments(self):
+        journal = self.create_journal()
+        JournalPhoto.objects.create(
+            journal=journal,
+            image=uploaded_journal_image('community-work.png'),
+            caption='Volunteers clearing the path',
+        )
+        JournalComment.objects.create(
+            journal=journal,
+            name='A community member',
+            body='Thank you for sharing this.',
+            is_approved=True,
+        )
+        JournalComment.objects.create(
+            journal=journal,
+            name='Awaiting review',
+            body='This should stay private for now.',
+        )
+
+        response = self.client.get(reverse('journal_detail', args=[journal.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.get(journal.cover_image.url).status_code, 200)
+        self.assertEqual(
+            self.client.get(journal.photos.first().image.url).status_code,
+            200,
+        )
+        self.assertContains(response, 'Residents cleared the path and improved drainage.')
+        self.assertContains(response, 'Volunteers clearing the path')
+        self.assertContains(response, 'A community member')
+        self.assertNotContains(response, 'Awaiting review')
+        self.assertContains(response, 'id="comments"')
+        self.assertContains(response, reverse('home') + '#journal')
+
+    def test_public_comment_is_held_until_approved(self):
+        journal = self.create_journal()
+        detail_url = reverse('journal_detail', args=[journal.slug])
+
+        response = self.client.post(detail_url, {
+            'name': 'Guest volunteer',
+            'body': 'This was a meaningful day.',
+        })
+
+        self.assertRedirects(response, f'{detail_url}#comments', fetch_redirect_response=False)
+        comment = JournalComment.objects.get(journal=journal)
+        self.assertFalse(comment.is_approved)
+        self.assertNotContains(self.client.get(detail_url), 'Guest volunteer')
+
+        comment.is_approved = True
+        comment.save(update_fields=('is_approved',))
+        self.assertContains(self.client.get(detail_url), 'Guest volunteer')
+
+    def test_unpublished_journals_and_their_photos_are_not_public(self):
+        journal = self.create_journal(published=False)
+
+        response = self.client.get(reverse('journal_detail', args=[journal.slug]))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(self.client.get(journal.cover_image.url).status_code, 404)
+
+    def test_admin_can_manage_journals_and_moderate_comments(self):
+        admin_user = User.objects.create_superuser(
+            username='journaladmin',
+            email='journaladmin@example.com',
+            password='StrongPass123!',
+        )
+        self.client.force_login(admin_user)
+
+        self.assertEqual(self.client.get('/admin/coordinator/umugandajournal/').status_code, 200)
+        self.assertEqual(self.client.get('/admin/coordinator/journalcomment/').status_code, 200)
+        journal_form = self.client.get('/admin/coordinator/umugandajournal/add/')
+        self.assertEqual(journal_form.status_code, 200)
+        self.assertContains(journal_form, 'Homepage photo')
 
 
 class ProjectPageTests(TestCase):
@@ -122,6 +381,8 @@ class ProjectPageTests(TestCase):
         response = Client(HTTP_HOST="testserver").get("/projects/")
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Upcoming Community Projects")
+        self.assertNotContains(response, "Upcoming Umuganda Projects")
         self.assertContains(response, "Neighborhood Clean-up")
         self.assertContains(response, "Gisozi Park")
 
@@ -740,13 +1001,13 @@ class ProfilePhotoTests(TestCase):
 
 
 class AccessibilityTests(TestCase):
-    def test_base_page_has_skip_link_and_homepage_slideshow_controls(self):
+    def test_base_page_has_skip_link_and_local_image_sources(self):
         response = self.client.get("/")
 
         self.assertContains(response, 'href="#main-content"')
         self.assertContains(response, 'id="main-content"')
-        self.assertContains(response, 'data-slide-toggle')
         self.assertContains(response, 'type="image/webp"')
+        self.assertNotContains(response, 'data-slide-toggle')
 
     def test_leader_signup_field_errors_are_linked_to_invalid_inputs(self):
         response = self.client.post("/leaders/register/", {})

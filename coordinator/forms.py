@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from .models import (
     Announcement,
     Community,
+    JournalComment,
     UserProfile,
     Volunteer,
     UmugandaProject,
@@ -229,6 +230,28 @@ class AnnouncementForm(AccessibleFormMixin, forms.ModelForm):
             'area': 'Optional. For example, your district, sector, or village.',
             'expires_at': 'Optional. Leave blank to keep this announcement visible.',
         }
+
+
+class JournalCommentForm(AccessibleFormMixin, forms.ModelForm):
+    class Meta:
+        model = JournalComment
+        fields = ('name', 'body')
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'autocomplete': 'name',
+            }),
+            'body': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+            }),
+        }
+
+    def clean_name(self):
+        return self.cleaned_data['name'].strip()
+
+    def clean_body(self):
+        return self.cleaned_data['body'].strip()
 
 
 class ProfileEditForm(AccessibleFormMixin, forms.Form):

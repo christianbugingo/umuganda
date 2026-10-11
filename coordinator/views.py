@@ -1,18 +1,24 @@
 import random
+import mimetypes
+from pathlib import Path
 
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth import logout
 from django.db.models import Q
+from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
 from django.utils import timezone
+from django.urls import reverse
 from functools import wraps
 from coordinator.forms import (
     AnnouncementForm,
     LeaderRegisterForm,
     LoginForm,
+    JournalCommentForm,
     ProfileEditForm,
     ProjectForm,
     RegisterForm,
@@ -24,41 +30,130 @@ from coordinator.forms import (
 from coordinator.models import (
     Announcement,
     Community,
+    JournalComment,
     Participation,
     UmugandaProject,
+    UmugandaJournal,
     UserProfile,
     Volunteer,
     Testimonial,
 )
 
 
-HOMEPAGE_VIDEOS = (
-    '40FMZIaGR-k',
-    '5FVO3IHwIzw',
-)
-
-
 def home(request):
     today = timezone.localdate()
-    announcements = list(
+    active_announcements = (
         Announcement.objects.filter(is_published=True)
         .filter(Q(expires_at__isnull=True) | Q(expires_at__gte=today))
         .select_related('created_by')
-        .order_by('-created_at', '-id')[:20]
+        .order_by('-created_at', '-id')
     )
+    announcements = list(active_announcements[:2])
     testimonials = list(
         Testimonial.objects.filter(
             is_published=True,
             consent_confirmed=True,
         ).order_by('-created_at', '-id')[:20]
     )
-    random.shuffle(announcements)
+    published_journals = UmugandaJournal.objects.filter(is_published=True)
+    journal_count = published_journals.count()
+    journal_photo_stories = {
+        journal.homepage_photo: journal
+        for journal in published_journals.exclude(homepage_photo__isnull=True)
+    }
+    journals = published_journals.order_by('-activity_date', '-id')[:4]
+    journal_story_cards = published_journals.filter(
+        homepage_photo__isnull=True,
+    ).prefetch_related('photos')[:4]
     random.shuffle(testimonials)
     return render(request, 'coordinator/home.html', {
-        'announcements': announcements[:3],
+        'announcements': announcements,
+        'announcement_count': active_announcements.count(),
         'testimonials': testimonials[:3],
-        'homepage_videos': HOMEPAGE_VIDEOS,
+        'journals': journals,
+        'journal_count': journal_count,
+        'journal_story_cards': journal_story_cards,
+        'journal_photo_stories': journal_photo_stories,
     })
+
+
+def announcement_list(request):
+    today = timezone.localdate()
+    announcements = Announcement.objects.filter(
+        is_published=True,
+    ).filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gte=today),
+    ).select_related('created_by').order_by('-created_at', '-id')
+    page_obj = Paginator(announcements, 10).get_page(request.GET.get('page'))
+    return render(request, 'coordinator/announcement_list.html', {
+        'page_obj': page_obj,
+        'announcements': page_obj.object_list,
+    })
+
+
+def journal_detail(request, slug):
+    journal = get_object_or_404(
+        UmugandaJournal.objects.prefetch_related('photos'),
+        slug=slug,
+        is_published=True,
+    )
+    if request.method == 'POST':
+        comment_form = JournalCommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.journal = journal
+            comment.save()
+            messages.success(request, 'Your comment was submitted for review.')
+            return redirect(f'{reverse("journal_detail", args=[journal.slug])}#comments')
+    else:
+        comment_form = JournalCommentForm()
+
+    return render(request, 'coordinator/journal_detail.html', {
+        'journal': journal,
+        'comments': journal.comments.filter(is_approved=True),
+        'comment_form': comment_form,
+        'related_journals': UmugandaJournal.objects.filter(
+            is_published=True,
+        ).exclude(pk=journal.pk)[:3],
+    })
+
+
+def journal_list(request):
+    journals = UmugandaJournal.objects.filter(
+        is_published=True,
+    ).order_by('-activity_date', '-id')
+    page_obj = Paginator(journals, 12).get_page(request.GET.get('page'))
+    return render(request, 'coordinator/journal_list.html', {
+        'page_obj': page_obj,
+        'journals': page_obj.object_list,
+    })
+
+
+def serve_journal_media(request, file_path):
+    media_root = Path(settings.MEDIA_ROOT).resolve()
+    journal_root = (media_root / 'journals').resolve()
+    image_path = (journal_root / file_path).resolve()
+    try:
+        image_path.relative_to(journal_root)
+    except ValueError as error:
+        raise Http404 from error
+
+    if not image_path.is_file():
+        raise Http404
+
+    stored_path = image_path.relative_to(media_root).as_posix()
+    is_published = UmugandaJournal.objects.filter(is_published=True).filter(
+        Q(cover_image=stored_path) | Q(photos__image=stored_path),
+    ).exists()
+    if not is_published and not (request.user.is_authenticated and request.user.is_staff):
+        raise Http404
+
+    response = FileResponse(
+        image_path.open('rb'),
+        content_type=mimetypes.guess_type(image_path.name)[0] or 'application/octet-stream',
+    )
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 

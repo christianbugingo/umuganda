@@ -1,0 +1,185 @@
+{% extends 'coordinator/base.html' %}
+
+{% block title %}{{ journal.title }} - Umuganda Journal{% endblock %}
+
+{% block content %}
+<style>
+    .journal-detail {
+        --journal-forest: #1c6b41;
+        --journal-ink: #202a24;
+        --journal-muted: #58665d;
+        --journal-line: #d7dfd9;
+        max-width: 900px;
+        margin: 0 auto;
+        color: var(--journal-ink);
+    }
+    .journal-back-link {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: .55rem;
+        margin-bottom: 1.5rem;
+        color: var(--journal-forest);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .journal-back-link span { font-size: 1.25rem; }
+    .journal-back-link:focus-visible,
+    .journal-related-card:focus-visible { outline: 3px solid #a65d27; outline-offset: 3px; }
+    .journal-story { padding-bottom: 2.5rem; border-bottom: 1px solid var(--journal-line); }
+    .journal-story-header { max-width: 48rem; margin-bottom: 1.5rem; }
+    .journal-kicker { margin: 0 0 .55rem; color: #8d4c2c; font-size: .8rem; font-weight: 750; text-transform: uppercase; }
+    .journal-title {
+        margin: 0 0 1rem;
+        color: var(--journal-ink);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 2.7rem;
+        font-weight: 500;
+        line-height: 1.12;
+    }
+    .journal-summary { margin: 0 0 1.2rem; color: var(--journal-muted); font-size: 1.15rem; line-height: 1.6; }
+    .journal-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 0; color: var(--journal-muted); font-size: .9rem; }
+    .journal-cover { margin: 0 0 1.6rem; }
+    .journal-cover img { display: block; width: 100%; max-height: 520px; aspect-ratio: 1.65; object-fit: cover; }
+    .journal-body { max-width: 48rem; color: #34453a; font-size: 1.05rem; line-height: 1.85; }
+    .journal-body p { margin-bottom: 1.25rem; }
+    .journal-photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .journal-photo { min-width: 0; margin: 0; }
+    .journal-photo img { display: block; width: 100%; aspect-ratio: 1.4; object-fit: cover; }
+    .journal-photo figcaption { padding-top: .5rem; color: var(--journal-muted); font-size: .87rem; }
+    .journal-section { padding: 2rem 0; border-bottom: 1px solid var(--journal-line); }
+    .journal-section h2 { margin: 0 0 1.2rem; color: var(--journal-ink); font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 500; }
+    .journal-related-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+    .journal-related-card { min-width: 0; overflow: hidden; border: 1px solid var(--journal-line); border-radius: 4px; background: #fff; color: inherit; text-decoration: none; }
+    .journal-related-card img { display: block; width: 100%; aspect-ratio: 1.4; object-fit: cover; }
+    .journal-related-copy { padding: .85rem; }
+    .journal-related-copy time { color: #8d4c2c; font-size: .75rem; font-weight: 700; }
+    .journal-related-copy h3 { margin: .35rem 0 0; color: var(--journal-ink); font-size: 1rem; line-height: 1.35; }
+    .journal-comment-list { display: grid; gap: 1rem; margin-bottom: 2rem; }
+    .journal-comment { padding: 0 0 1rem; border-bottom: 1px solid var(--journal-line); }
+    .journal-comment h3 { margin: 0 0 .25rem; color: var(--journal-ink); font-size: 1rem; }
+    .journal-comment time { color: var(--journal-muted); font-size: .8rem; }
+    .journal-comment p { margin: .55rem 0 0; color: #34453a; white-space: pre-wrap; }
+    .journal-no-comments { margin-bottom: 1.5rem; color: var(--journal-muted); }
+    .journal-comment-form { max-width: 38rem; }
+    .journal-comment-form label { display: block; margin-bottom: .35rem; color: var(--journal-ink); font-weight: 650; }
+    .journal-comment-form .form-control { width: 100%; margin-bottom: 1rem; }
+    .journal-comment-form .errorlist { color: #9b2c20; }
+    .journal-moderation-note { margin: .75rem 0 0; color: var(--journal-muted); font-size: .85rem; }
+    .journal-submit,
+    .journal-back-button {
+        display: inline-flex;
+        min-height: 2.8rem;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .65rem 1rem;
+        border: 1px solid var(--journal-forest);
+        border-radius: 4px;
+        background: var(--journal-forest);
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .journal-submit:hover,
+    .journal-back-button:hover { background: #155333; color: #fff; }
+    .journal-end { padding: 1.5rem 0 .5rem; }
+    @media (max-width: 760px) {
+        .journal-title { font-size: 2.15rem; }
+        .journal-related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 480px) {
+        .journal-title { font-size: 1.8rem; }
+        .journal-summary { font-size: 1rem; }
+        .journal-photo-grid,
+        .journal-related-grid { grid-template-columns: minmax(0, 1fr); }
+        .journal-cover img { aspect-ratio: 1.2; }
+    }
+</style>
+
+<div class="journal-detail">
+    <a class="journal-back-link" href="{% url 'home' %}#journal"><span aria-hidden="true">&larr;</span> Back to journals</a>
+
+    <article class="journal-story">
+        <header class="journal-story-header">
+            <p class="journal-kicker">Umuganda journal</p>
+            <h1 class="journal-title">{{ journal.title }}</h1>
+            <p class="journal-summary">{{ journal.summary }}</p>
+            <p class="journal-meta">
+                <time datetime="{{ journal.activity_date|date:'Y-m-d' }}">{{ journal.activity_date|date:"F j, Y" }}</time>
+                <span>{{ journal.location }}</span>
+                {% if journal.organizer %}<span>Organized by {{ journal.organizer }}</span>{% endif %}
+            </p>
+        </header>
+
+        <figure class="journal-cover">
+            <img src="{{ journal.cover_image.url }}" alt="{{ journal.title }}" width="1200" height="730">
+        </figure>
+
+        <div class="journal-body">{{ journal.description|linebreaks }}</div>
+
+        {% if journal.photos.all %}
+            <div class="journal-photo-grid" aria-label="More photos from this Umuganda activity">
+                {% for photo in journal.photos.all %}
+                    <figure class="journal-photo">
+                        <img src="{{ photo.image.url }}" alt="{% if photo.caption %}{{ photo.caption }}{% else %}{{ journal.title }}{% endif %}" loading="lazy" width="900" height="640">
+                        {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+                    </figure>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </article>
+
+    {% if related_journals %}
+        <section class="journal-section" aria-labelledby="related-journals-heading">
+            <h2 id="related-journals-heading">More from the journal</h2>
+            <div class="journal-related-grid">
+                {% for related in related_journals %}
+                    <a class="journal-related-card" href="{% url 'journal_detail' related.slug %}">
+                        <img src="{{ related.cover_image.url }}" alt="Photo from {{ related.title }}" loading="lazy" width="600" height="430">
+                        <div class="journal-related-copy">
+                            <time datetime="{{ related.activity_date|date:'Y-m-d' }}">{{ related.activity_date|date:"M j, Y" }}</time>
+                            <h3>{{ related.title }}</h3>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="journal-section" id="comments" aria-labelledby="journal-comments-heading">
+        <h2 id="journal-comments-heading">Community comments</h2>
+        {% if comments %}
+            <div class="journal-comment-list">
+                {% for comment in comments %}
+                    <article class="journal-comment">
+                        <h3>{{ comment.name }}</h3>
+                        <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:"M j, Y" }}</time>
+                        <p>{{ comment.body }}</p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="journal-no-comments">No comments yet.</p>
+        {% endif %}
+
+        <form class="journal-comment-form" method="post" action="#comments">
+            {% csrf_token %}
+            {% for field in comment_form %}
+                <div>
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="form-text" id="{{ field.id_for_label }}_helptext">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}<ul class="errorlist" id="{{ field.id_for_label }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="journal-submit" type="submit">Submit comment</button>
+            <p class="journal-moderation-note">Comments are reviewed before they appear publicly.</p>
+        </form>
+    </section>
+
+    <div class="journal-end">
+        <a class="journal-back-button" href="{% url 'home' %}#journal"><span aria-hidden="true">&larr;</span> Back to all journals</a>
+    </div>
+</div>
+{% endblock %}
