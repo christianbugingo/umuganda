@@ -2,6 +2,7 @@ services:
   - type: web
     name: umuganda
     env: python
+    plan: starter
     autoDeployTrigger: 'off'
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     startCommand: python manage.py migrate --noinput && python manage.py create_superuser_from_env && python -m waitress --url-scheme=https --port=$PORT umuganda.wsgi:application
@@ -12,3 +13,11 @@ services:
         value: "false"
       - key: DJANGO_ALLOWED_HOSTS
         value: umuganda-jjo3.onrender.com
+      - key: DJANGO_SQLITE_PATH
+        value: /var/data/db.sqlite3
+      - key: DJANGO_MEDIA_ROOT
+        value: /var/data/media
+    disk:
+      name: umuganda-data
+      mountPath: /var/data
+      sizeGB: 1

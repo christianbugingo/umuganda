@@ -143,9 +143,9 @@ python scripts/sqlite_backup.py restore /path/to/durable/backups/db-YYYYMMDDTHHM
 The SQLite database does not contain uploaded profile-photo files. Back up the
 `media/` directory as well. Render's filesystem is ephemeral on free services, so
 the database and uploads are lost when the service spins down, restarts, or redeploys.
-Use the free deployment for a disposable preview only; never enter data you need to
-keep. The app remains on SQLite; keep it on one Render instance and do not enable
-multiple instances.
+Use a free deployment only for a disposable preview. The Render Blueprint below
+configures a paid service with persistent storage for data you need to keep. The app
+remains on SQLite; keep it on one Render instance and do not enable multiple instances.
 
 ##### Create a preview admin without Render Shell
 
@@ -164,30 +164,23 @@ If the Free service loses its SQLite database on a restart or spin-down, set the
 variables again to recreate the admin. Use only throwaway accounts and test data on
 this ephemeral service; do not enter real volunteer or leader information.
 
-#### Keep SQLite and uploads on a Render persistent disk
+#### Persistent data on Render
 
-Persistent disks require a paid Render web-service plan and incur additional disk
-charges. The current `render.yaml` intentionally does not select a paid plan or attach
-a disk; choose/approve the cost in Render first.
+The Render Blueprint in `render.yaml` attaches a 1 GB persistent disk at `/var/data`
+and configures the database and uploaded media to live there. Persistent disks require
+a paid Render web-service plan and incur charges; the Blueprint selects the Starter
+plan. Review the plan and disk cost in Render before applying the Blueprint. Keep this
+SQLite-backed service at one instance and do not enable multiple instances.
 
-In the Render Dashboard:
-
-1. Open the `umuganda` web service and select a paid plan that supports persistent
-   disks.
-2. Open **Disks**, add a disk mounted at `/var/data`, and start with **1 GB**. Render
-   restarts the service when you add the disk.
-3. In **Environment**, set `DJANGO_SQLITE_PATH` to `/var/data/db.sqlite3` and
-   `DJANGO_MEDIA_ROOT` to `/var/data/media`, then save and let the service redeploy.
-   New uploads and the database will now be written to the disk.
-
-**Before attaching a disk to an existing service, export any existing database and
-uploads.** Mounting the disk restarts the service, and the existing database on
-Render's ephemeral filesystem will not automatically move onto it. If the existing
-site contains data you need, use the Render Shell to create a SQLite backup and copy
-it off Render, and archive `/opt/render/project/src/media/` if it exists. After the
-disk is mounted, copy the saved database to `/var/data/db.sqlite3` and uploads to
-`/var/data/media/` before relying on the new deployment. If you cannot export the
-old files, assume a new empty database will be created.
+**Before applying this change to an existing service, export its current database and
+uploads.** The existing database on Render's ephemeral filesystem will not
+automatically move onto the disk. If the site contains data you need, use the Render
+Shell to create a SQLite backup and copy it off Render, and archive
+`/opt/render/project/src/media/` if it exists. After the persistent disk is attached,
+copy the saved database to `/var/data/db.sqlite3` and uploads to `/var/data/media/`
+before relying on the new deployment. If the ephemeral database has already been
+lost, the new disk will start with an empty database and registrations must be made
+again.
 
 #### Render recovery plan
 
