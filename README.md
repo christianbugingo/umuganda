@@ -164,6 +164,13 @@ If the Free service loses its SQLite database on a restart or spin-down, set the
 variables again to recreate the admin. Use only throwaway accounts and test data on
 this ephemeral service; do not enter real volunteer or leader information.
 
+The Render start command also creates an active `test_community_leader` account
+(approved for a fictional test village) and an active `test_volunteer` account.
+Their passwords are fixed test credentials provided to the site owner with this
+change. The command does not reset passwords for accounts that already exist.
+These accounts are for testing only; change or remove them before using the site
+with real community data.
+
 #### Persistent data on Render
 
 The Render Blueprint in `render.yaml` attaches a 1 GB persistent disk at `/var/data`
