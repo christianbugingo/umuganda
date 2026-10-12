@@ -10,13 +10,13 @@ from coordinator.models import Community, UserProfile, Volunteer
 # documented credentials on startup so an earlier partial bootstrap is repaired.
 TEST_ACCOUNTS = (
     (
-        'test_community_leader',
-        'pbkdf2_sha256$1200000$NM5uKFuzlH0jDaGewuHM91$3b+/PW9+wGwf3/G4ewnE8FFmDpc22QbZEilK/akWpxU=',
+        'test_lead',
+        'pbkdf2_sha256$1200000$Ax9QlhxIVKrn8Fm0CD0YMB$vetX+2H11zh60LPPFVR3KXSBwZ9b3Oi930sHdRSwMGU=',
         'leader',
     ),
     (
-        'test_volunteer',
-        'pbkdf2_sha256$1200000$Hg5MhvtEfn0cdEK15htRWY$McF+MUuJwoTS6Ond6N0CJBz6QDbUdkL6jVoQbIYvFSI=',
+        'test_vol',
+        'pbkdf2_sha256$1200000$cktOEUhybbdDxHfXMSuow1$AZRCE7nse5Z0Om+t9O5eAN+JS6wHC/LbqvSV7kPyQJg=',
         'volunteer',
     ),
 )
@@ -28,6 +28,10 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         User = get_user_model()
+        User.objects.filter(
+            username__in=('test_community_leader', 'test_volunteer'),
+        ).update(is_active=False)
+
         leader, _ = User.objects.get_or_create(
             username=TEST_ACCOUNTS[0][0],
             defaults={
