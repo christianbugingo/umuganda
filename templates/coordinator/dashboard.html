@@ -1,172 +1,64 @@
 {% extends 'coordinator/base.html' %}
 
-{% block title %}My Dashboard - Umuganda Coordinator{% endblock %}
+{% block title %}Volunteer Dashboard - Umuganda Coordinator{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem;">
-    <!-- Left Sidebar - Profile -->
+<header class="dashboard-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
-        <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;">
-            <div style="text-align: center; margin-bottom: 1rem;">
-                {% if profile.photo %}
-                    <img src="{{ profile.photo.url }}" alt="Profile photo" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin: 0 auto 1rem;">
-                {% else %}
-                    <div style="width: 100px; height: 100px; background: #1c6b41; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                        {{ user.username|first|upper }}
-                    </div>
-                {% endif %}
-                <h3 style="margin-bottom: 0.5rem;">{{ user.get_full_name|default:user.username }}</h3>
-                <p style="color: #666;">Volunteer</p>
-                <a href="{% url 'profile_edit' %}" class="btn btn-sm btn-outline-success">Edit Profile</a>
-            </div>
-            
-            <div style="border-top: 1px solid #eee; padding-top: 1rem;">
-                <h4 style="color: #1c6b41; margin-bottom: 1rem;">Profile Info</h4>
-                <div style="margin-bottom: 0.75rem;">
-                    <strong>Username:</strong><br>
-                    {{ user.username }}
-                </div>
-                <div style="margin-bottom: 0.75rem;">
-                    <strong>Email:</strong><br>
-                    {{ user.email|default:"Not provided" }}
-                </div>
-                <div style="margin-bottom: 0.75rem;">
-                    <strong>Phone:</strong><br>
-                    {{ volunteer.phone|default:"Not provided" }}
-                </div>
-                {% if profile.managed_area_label %}
-                <div style="margin-bottom: 0.75rem;">
-                    <strong>Your area:</strong><br>
-                    {{ profile.managed_area_label }}
-                </div>
-                {% endif %}
-                {% if volunteer.community %}
-                <div style="margin-bottom: 0.75rem;">
-                    <strong>Community:</strong><br>
-                    {{ volunteer.community.village }}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h4 style="color: #1c6b41; margin-bottom: 1rem;">Quick Stats</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="text-align: center; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #1c6b41;">{{ total_projects }}</div>
-                    <div style="font-size: 0.9rem; color: #666;">Projects</div>
-                </div>
-                <div style="text-align: center; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #1c6b41;">{{ total_hours }}</div>
-                    <div style="font-size: 0.9rem; color: #666;">Hours</div>
-                </div>
-            </div>
-        </div>
+        <p class="text-uppercase small fw-bold mb-2" style="color:#08785f; letter-spacing:.12em">Your community workspace</p>
+        <h1>Welcome back, {{ user.first_name|default:user.username }}.</h1>
+        <p>Every hour shared helps build a stronger community.</p>
     </div>
+    <a class="btn btn-success px-4 py-2" href="{% url 'project_list' %}">Explore local projects <span aria-hidden="true">→</span></a>
+</header>
 
-    <!-- Main Content - Projects -->
-    <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2 style="color: #1c6b41; margin: 0;">My Projects ({{ total_projects }})</h2>
-        <a href="{% url 'project_list' %}" style="background: #1c6b41; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 5px; font-size: 0.9rem;">
-            Find More Projects
-        </a>
-    </div>
-    
-    {% if participations %}
-        <div style="display: grid; gap: 1rem;">
-            {% for participation in participations %}
-            <div style="border: 1px solid #eee; border-radius: 8px; padding: 1.5rem; border-left: 4px solid #1c6b41;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <h3 style="margin-top: 0; color: #1c6b41;">{{ participation.project.title }}</h3>
-                        <div style="color: #666; margin-bottom: 1rem;">
-                            <div><strong>Date:</strong> {{ participation.project.date }}</div>
-                            <div><strong>Location:</strong> {{ participation.project.community.village }}</div>
-                            <div><strong>Status:</strong> 
-                                <span style="padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.9rem; 
-                                    {% if participation.project.status == 'completed' %}
-                                        background: #d4edda; color: #155724;
-                                    {% elif participation.project.status == 'ongoing' %}
-                                        background: #fff3cd; color: #856404;
-                                    {% else %}
-                                        background: #d1ecf1; color: #0c5460;
-                                    {% endif %}">
-                                    {{ participation.project.get_status_display }}
-                                </span>
-                            </div>
-                            <div><strong>You signed up:</strong> {{ participation.signed_up_at|date:"M d, Y" }}</div>
-                            {% if participation.attended %}
-                            <div><strong>Hours contributed:</strong> {{ participation.hours_contributed }}</div>
-                            {% endif %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Projects joined</div><div class="dashboard-stat-value">{{ total_projects }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Hours contributed</div><div class="dashboard-stat-value">{{ total_hours|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Activities attended</div><div class="dashboard-stat-value">{{ projects_attended }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Your community</div><div class="dashboard-stat-value" style="font-size:1.15rem">{{ volunteer.community.village|default:profile.managed_area_label|default:"Rwanda" }}</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8" id="my-projects">
+        <section class="dashboard-card">
+            <div class="dashboard-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div><h2 class="h5 mb-1 fw-bold">My community activities</h2><p class="small text-secondary mb-0">Your upcoming and completed volunteer work</p></div>
+                <span class="badge rounded-pill text-bg-light">{{ total_projects }} joined</span>
+            </div>
+            <div class="dashboard-card-body">
+                {% for participation in participations %}
+                    <article class="p-3 mb-3 rounded-3" style="border:1px solid #e5ecef; border-left:4px solid #08785f">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div><h3 class="h6 fw-bold mb-1">{{ participation.project.title }}</h3><p class="small text-secondary mb-2">{{ participation.project.community.full_address }} · {{ participation.project.date|date:"M j, Y" }}</p></div>
+                            <span class="badge align-self-start {% if participation.project.status == 'completed' %}text-bg-secondary{% elif participation.project.status == 'ongoing' %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ participation.project.get_status_display }}</span>
                         </div>
-                    </div>
-                    <a href="{% url 'project_detail' participation.project.id %}" style="color: #1c6b41; text-decoration: none;">
-                        View Details →
-                    </a>
-                </div>
-                
-                {% if participation.attended %}
-                <div style="background: #d4edda; color: #155724; padding: 0.5rem; border-radius: 5px; margin-top: 1rem; text-align: center;">
-                    ✅ You attended this project and contributed {{ participation.hours_contributed }} hours
-                </div>
-                {% endif %}
+                        {% if participation.attended %}<p class="small mb-2 text-success">Attended · {{ participation.hours_contributed }} hours contributed</p>{% endif %}
+                        <a class="small fw-semibold text-success text-decoration-none" href="{% url 'project_detail' participation.project.id %}">View activity details →</a>
+                    </article>
+                {% empty %}
+                    <div class="dashboard-empty"><div class="display-6 mb-2" aria-hidden="true">🌱</div><h3 class="h5 text-dark">Your first activity starts here</h3><p>Find a project near you and join your neighbors in making a difference.</p><a class="btn btn-success" href="{% url 'project_list' %}">Browse projects</a></div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div style="text-align: center; padding: 3rem; color: #666;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
-            <h3 style="color: #666; margin-bottom: 0.5rem;">No projects yet</h3>
-            <p style="margin-bottom: 1.5rem;">You haven't signed up for any community projects.</p>
-            <a href="{% url 'project_list' %}" style="background: #1c6b41; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 5px;">
-                Browse Available Projects
-            </a>
-        </div>
-    {% endif %}
-  </div>
-</div>
-
-{% if show_signup_success %}
-<div class="modal fade" id="volunteerWelcomeModal" tabindex="-1" aria-labelledby="volunteerWelcomeTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title h5" id="volunteerWelcomeTitle">You're signed in as a volunteer</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="dashboard-card mb-4">
+            <div class="dashboard-card-header"><h2 class="h6 fw-bold mb-0">Your profile</h2></div>
+            <div class="dashboard-card-body text-center">
+                {% if profile.photo %}<img src="{{ profile.photo.url }}" alt="" class="rounded-circle mb-3" style="width:76px;height:76px;object-fit:cover">
+                {% else %}<div class="dashboard-avatar mx-auto mb-3" style="width:76px;height:76px;font-size:1.5rem">{{ user.username|first|upper }}</div>{% endif %}
+                <h3 class="h6 fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h3><p class="small text-secondary mb-3">{{ volunteer.phone|default:"Phone not added" }}</p>
+                {% if volunteer.community %}<p class="small text-secondary">{{ volunteer.community.full_address }}</p>{% endif %}
+                <a href="{% url 'profile_edit' %}" class="btn btn-outline-success btn-sm w-100">Edit profile</a>
             </div>
-            <div class="modal-body">
-                <p>Your volunteer account is ready. The projects list will show activities for your registered area.</p>
-                {% if profile.managed_area_label %}<p class="mb-0"><strong>Your area:</strong> {{ profile.managed_area_label }}</p>{% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue to dashboard</button>
-                <a class="btn btn-success" href="{% url 'project_list' %}">Find local projects</a>
-            </div>
-        </div>
+        </section>
+        <aside class="p-4 rounded-4 text-white" style="background:linear-gradient(145deg,#075544,#09876a)"><p class="small text-uppercase fw-bold mb-2" style="letter-spacing:.12em;color:#bcebdd">Umuganda spirit</p><p class="h5 mb-2">Together for a better community.</p><p class="small mb-0" style="color:#d0ede3">Thank you for giving your time and energy to Rwanda.</p></aside>
     </div>
 </div>
-{% endif %}
-
-<style>
-    @media (max-width: 768px) {
-        .container > div {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block scripts %}
-{{ block.super }}
 {% if show_signup_success %}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const welcomeModal = document.getElementById('volunteerWelcomeModal');
-        if (welcomeModal && window.bootstrap) {
-            new bootstrap.Modal(welcomeModal).show();
-        }
-    });
-</script>
+<div class="modal fade" id="volunteerWelcomeModal" tabindex="-1" aria-labelledby="volunteerWelcomeTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="volunteerWelcomeTitle">Welcome to your volunteer dashboard</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>Your account is ready. Explore activities in your community and join your first project.</p></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue</button><a class="btn btn-success" href="{% url 'project_list' %}">Find local projects</a></div></div></div></div>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}{{ block.super }}{% if show_signup_success %}<script>document.addEventListener('DOMContentLoaded',function(){const modal=document.getElementById('volunteerWelcomeModal');if(modal&&window.bootstrap)new bootstrap.Modal(modal).show();});</script>{% endif %}{% endblock %}

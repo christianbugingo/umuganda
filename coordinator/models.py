@@ -328,11 +328,11 @@ class UserProfile(models.Model):
             }
         province_names = dict(Community.PROVINCE_CHOICES)
         parts = [
-            area['village'],
-            area['cell'],
-            area['sector'],
-            area['district'],
             province_names.get(area['province'], area['province']),
+            area['district'],
+            area['sector'],
+            area['cell'],
+            area['village'],
         ]
         return ", ".join(value for value in parts if value)
 

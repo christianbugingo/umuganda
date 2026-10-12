@@ -1,5 +1,6 @@
 import random
 import mimetypes
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
@@ -539,7 +540,8 @@ def leader_dashboard(request):
     announcements = Announcement.objects.filter(
         created_by=request.user,
     ).order_by('-created_at')
-    return render(request, 'coordinator/leader_dashboard.html', {
+    context = _leader_dashboard_context(profile, communities, projects, announcements)
+    context.update({
         'profile': profile,
         'communities': communities,
         'managed_area': profile.managed_area_label(),
@@ -548,8 +550,97 @@ def leader_dashboard(request):
         'announcement_form': AnnouncementForm(
             initial={'area': profile.managed_area_label()}
         ),
-        'announcements': announcements,
         'today': timezone.localdate(),
+    })
+    return render(request, 'coordinator/leader_dashboard.html', context)
+
+
+def _leader_dashboard_context(profile, communities, projects, announcements):
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    week_end = today + timedelta(days=7)
+    participations = Participation.objects.filter(project__in=projects)
+    total_participations = participations.count()
+    attended_participations = participations.filter(attended=True).count()
+    pie_percent = round(attended_participations * 100 / total_participations) if total_participations else 0
+    project_total = projects.count()
+    chart_height = lambda value: max(3, round(value * 65 / project_total)) if project_total else 0
+    return {
+        'profile': profile,
+        'managed_area': profile.managed_area_label(),
+        'announcements': announcements,
+        'projects': projects,
+        'active_project_count': projects.filter(status__in=('planned', 'ongoing')).count(),
+        'published_update_count': announcements.filter(is_published=True).count(),
+        'projects_this_month': projects.filter(created_at__date__gte=month_start).count(),
+        'upcoming_project_count': projects.filter(
+            date__gte=today,
+            date__lt=week_end,
+            status__in=('planned', 'ongoing'),
+        ).count(),
+        'community_member_count': Volunteer.objects.filter(community__in=communities).count(),
+        'members_this_month': Volunteer.objects.filter(
+            community__in=communities,
+            user__date_joined__date__gte=month_start,
+        ).count(),
+        'updates_this_month': announcements.filter(
+            is_published=True,
+            created_at__date__gte=month_start,
+        ).count(),
+        'upcoming_activities': projects.filter(
+            date__gte=today,
+            date__lt=week_end,
+            status__in=('planned', 'ongoing'),
+        ).order_by('date', 'start_time')[:6],
+        'planned_projects': projects.filter(status='planned').count(),
+        'ongoing_projects': projects.filter(status='ongoing').count(),
+        'completed_projects': projects.filter(status='completed').count(),
+        'total_projects': project_total,
+        'planned_bar_height': chart_height(projects.filter(status='planned').count()),
+        'ongoing_bar_height': chart_height(projects.filter(status='ongoing').count()),
+        'completed_bar_height': chart_height(projects.filter(status='completed').count()),
+        'total_participations': total_participations,
+        'attended_participations': attended_participations,
+        'not_attended_participations': total_participations - attended_participations,
+        'attendance_percent': pie_percent,
+        'attendance_pie_style': (
+            f'conic-gradient(#0b8067 0 {pie_percent}%, #e6edf0 {pie_percent}% 100%)'
+        ),
+        'today': today,
+    }
+
+
+@role_required('leader')
+def leader_residents(request):
+    profile = _profile_for(request.user)
+    communities = profile.managed_communities()
+    residents = Volunteer.objects.filter(
+        community__in=communities,
+    ).select_related('user', 'community').order_by(
+        'user__last_name', 'user__first_name', 'user__username',
+    )
+    search = request.GET.get('q', '').strip()
+    if search:
+        residents = residents.filter(
+            Q(user__first_name__icontains=search)
+            | Q(user__last_name__icontains=search)
+            | Q(user__username__icontains=search)
+            | Q(user__email__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(community__district__icontains=search)
+            | Q(community__sector__icontains=search)
+            | Q(community__cell__icontains=search)
+            | Q(community__village__icontains=search)
+        )
+    page_obj = Paginator(residents, 25).get_page(request.GET.get('page'))
+    return render(request, 'coordinator/leader_residents.html', {
+        'profile': profile,
+        'residents': page_obj.object_list,
+        'page_obj': page_obj,
+        'search': search,
+        'managed_area': profile.managed_area_label(),
+        'total_residents': residents.count(),
+        'province_name': dict(Community.PROVINCE_CHOICES).get(profile.province, profile.province),
     })
 
 
@@ -570,18 +661,17 @@ def leader_announcement_create(request):
     projects = UmugandaProject.objects.filter(
         created_by=request.user,
     ).select_related('community').order_by('-created_at')
-    return render(request, 'coordinator/leader_dashboard.html', {
+    context = _leader_dashboard_context(profile, communities, projects, Announcement.objects.filter(
+        created_by=request.user,
+    ).order_by('-created_at'))
+    context.update({
         'profile': profile,
         'communities': communities,
         'managed_area': profile.managed_area_label(),
         'project_form': ProjectForm(communities=communities),
-        'projects': projects,
         'announcement_form': form,
-        'announcements': Announcement.objects.filter(
-            created_by=request.user,
-        ).order_by('-created_at'),
-        'today': timezone.localdate(),
     })
+    return render(request, 'coordinator/leader_dashboard.html', context)
 
 
 @role_required('leader')

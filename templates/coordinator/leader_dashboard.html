@@ -3,169 +3,80 @@
 {% block title %}Leader Dashboard - Umuganda Coordinator{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<header class="dashboard-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
-        <h1 class="text-success mb-1">Community Leader Dashboard</h1>
-        <p class="text-muted mb-0">Post projects and share community updates with residents.</p>
+        <p class="text-uppercase small fw-bold mb-2" style="color:#08785f;letter-spacing:.12em">{{ profile.get_leader_type_display }} · {{ managed_area|default:'Your area' }}</p>
+        <h1>Community Leader Dashboard</h1>
+        <p>Bring residents together through local projects and trusted community updates.</p>
     </div>
-    <a class="btn btn-outline-success" href="{% url 'profile_edit' %}">Edit Profile</a>
+    <a class="btn btn-outline-success px-4 py-2" href="{% url 'profile_edit' %}">Edit profile</a>
+</header>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Active projects</div><div class="dashboard-stat-value">{{ active_project_count }}</div><small class="text-success">{{ projects_this_month }} created this month</small></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Community members</div><div class="dashboard-stat-value">{{ community_member_count }}</div><small class="text-success">{{ members_this_month }} joined this month</small></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Upcoming activities</div><div class="dashboard-stat-value">{{ upcoming_project_count }}</div><small class="text-success">Scheduled this week</small></div></div>
+    <div class="col-6 col-xl-3"><div class="dashboard-stat"><div class="dashboard-stat-label">Updates published</div><div class="dashboard-stat-value">{{ published_update_count }}</div><small class="text-success">{{ updates_this_month }} published this month</small></div></div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-4">
-        <section class="card shadow-sm mb-4">
-            <div class="card-body text-center">
-                {% if profile.photo %}
-                    <img src="{{ profile.photo.url }}" alt="Profile photo" class="rounded-circle mb-3" style="width: 112px; height: 112px; object-fit: cover;">
-                {% else %}
-                    <div class="rounded-circle bg-success text-white mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 112px; height: 112px; font-size: 2rem;">
-                        {{ user.username|first|upper }}
+<div class="row g-4 align-items-stretch">
+    <div class="col-xl-8">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-6">
+                <section class="dashboard-card leader-compose-panel">
+                    <div class="dashboard-card-header"><h2 class="h5 fw-bold mb-1">Post a community project</h2><p class="small text-secondary mb-0">Plan an activity for your managed area.</p></div>
+                    <div class="dashboard-card-body">
+                        <form method="post">{% csrf_token %}
+                            {% if project_form.errors %}<div class="alert alert-danger py-2" role="alert"><strong>Review the project details.</strong>{% for field in project_form %}{% for error in field.errors %}<div class="small">{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}{% for error in project_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+                            {% for field in project_form %}<div class="mb-3"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}</div>{% endfor %}
+                            <button class="btn btn-success w-100" type="submit">Publish project</button>
+                        </form>
                     </div>
-                {% endif %}
-                <h2 class="h4">{{ user.get_full_name|default:user.username }}</h2>
-                <span class="badge text-bg-success">{{ profile.get_leader_type_display }}</span>
-                <p class="text-muted mt-3 mb-1"><strong>Email:</strong> {{ user.email }}</p>
-                <p class="text-muted mb-0"><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
+                </section>
             </div>
-        </section>
-        <section class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="h5 text-success">Your managed area</h2>
-                {% if managed_area %}
-                    <p class="mb-0">{{ managed_area }}</p>
-                {% else %}
-                    <p class="text-muted mb-0">No area is assigned to this account.</p>
-                {% endif %}
+            <div class="col-lg-6" id="community-updates">
+                <section class="dashboard-card leader-compose-panel">
+                    <div class="dashboard-card-header"><h2 class="h5 fw-bold mb-1">Share a community update</h2><p class="small text-secondary mb-0">Keep residents informed with local news.</p></div>
+                    <div class="dashboard-card-body">
+                        <form method="post" action="{% url 'leader_announcement_create' %}">{% csrf_token %}
+                            {% if announcement_form.errors %}<div class="alert alert-danger py-2" role="alert"><strong>Review the update details.</strong>{% for field in announcement_form %}{% for error in field.errors %}<div class="small">{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}{% for error in announcement_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+                            {% for field in announcement_form %}<div class="mb-3"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}</div>{% endfor %}
+                            <button class="btn btn-success w-100" type="submit">Publish community update</button>
+                        </form>
+                    </div>
+                </section>
             </div>
-        </section>
+        </div>
+
+        <div class="row g-4 mt-0">
+            <div class="col-lg-6"><section class="dashboard-card h-100"><div class="dashboard-card-header d-flex justify-content-between align-items-center"><div><h2 class="h6 fw-bold mb-0">Recent projects</h2><small class="text-secondary">Your published activities</small></div><a class="small text-success" href="{% url 'project_list' %}">Browse</a></div><div class="dashboard-card-body">
+                {% for project in projects|slice:':4' %}<article class="border-bottom pb-3 mb-3"><div class="d-flex justify-content-between gap-2"><strong class="small">{{ project.title }}</strong><span class="badge text-bg-light">{{ project.get_status_display }}</span></div><p class="text-secondary small mb-2">{{ project.date|date:'M j, Y' }} · {{ project.community.full_address }}</p><div class="d-flex gap-2"><a class="small text-success" href="{% url 'leader_project_edit' project.id %}">Edit</a><form method="post" action="{% url 'leader_project_delete' project.id %}" onsubmit="return confirm('Delete this project?');">{% csrf_token %}<button class="btn btn-link btn-sm text-danger p-0" type="submit">Delete</button></form></div></article>{% empty %}<p class="small text-secondary mb-0">No projects yet. Publish your first activity above.</p>{% endfor %}
+            </div></section></div>
+            <div class="col-lg-6"><section class="dashboard-card h-100"><div class="dashboard-card-header d-flex justify-content-between align-items-center"><div><h2 class="h6 fw-bold mb-0">Recent community updates</h2><small class="text-secondary">Notices shared with residents</small></div><a class="small text-success" href="{% url 'announcement_list' %}">View all</a></div><div class="dashboard-card-body">
+                {% for announcement in announcements|slice:':4' %}<article class="border-bottom pb-3 mb-3"><div class="d-flex justify-content-between gap-2"><strong class="small">{{ announcement.title }}</strong><span class="badge text-bg-light">{{ announcement.get_category_display }}</span></div><p class="text-secondary small mb-2">{{ announcement.created_at|date:'M j, Y' }}{% if announcement.expires_at %} · Expires {{ announcement.expires_at|date:'M j' }}{% endif %}</p><div class="d-flex gap-2"><a class="small text-success" href="{% url 'leader_announcement_edit' announcement.pk %}">Edit</a><form method="post" action="{% url 'leader_announcement_delete' announcement.pk %}" onsubmit="return confirm('Delete this update?');">{% csrf_token %}<button class="btn btn-link btn-sm text-danger p-0" type="submit">Delete</button></form></div></article>{% empty %}<p class="small text-secondary mb-0">No updates yet. Share useful news with your community above.</p>{% endfor %}
+            </div></section></div>
+        </div>
     </div>
 
-    <div class="col-lg-8">
-        <section class="card shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h2 class="h4 text-success mb-3">Post a project announcement</h2>
-                <form method="post">
-                    {% csrf_token %}
-                    {% if project_form.errors %}
-                        <div class="alert alert-danger" role="alert" aria-labelledby="project-error-heading">
-                            <h3 class="h6" id="project-error-heading">Please correct the errors below.</h3>
-                            <ul class="mb-0">
-                                {% for field in project_form %}
-                                    {% for error in field.errors %}
-                                        <li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in project_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    {% for field in project_form %}
-                        <div class="mb-3">
-                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
-                            {% if field.errors %}<ul class="text-danger small mb-0" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        </div>
-                    {% endfor %}
-                    <button class="btn btn-success" type="submit">Publish Project</button>
-                </form>
-            </div>
-        </section>
+    <aside class="col-xl-4">
+        <section class="dashboard-card mb-4"><div class="dashboard-card-header d-flex justify-content-between align-items-center"><div><h2 class="h6 fw-bold mb-0">Upcoming community activities</h2><small class="text-secondary">Next seven days</small></div><a class="small text-success" href="{% url 'project_list' %}">View all →</a></div><div class="dashboard-card-body p-0">
+            {% for project in upcoming_activities %}<article class="d-flex gap-3 p-3 border-bottom"><div class="text-center rounded-3 p-2 flex-shrink-0" style="min-width:54px;background:#edf7f3;color:#08785f"><span class="small fw-bold text-uppercase d-block">{{ project.date|date:'M' }}</span><strong class="fs-5">{{ project.date|date:'d' }}</strong></div><div class="min-w-0"><h3 class="h6 fw-bold mb-1">{{ project.title }}</h3><p class="small text-secondary mb-1">{{ project.community.full_address }}</p><p class="small text-secondary mb-0">{{ project.start_time|time:'g:i A' }}{% if project.end_time %}–{{ project.end_time|time:'g:i A' }}{% endif %}</p></div></article>{% empty %}<div class="dashboard-empty py-4"><p class="mb-0">No activities scheduled for the next seven days.</p></div>{% endfor %}
+        </div></section>
+        <section class="dashboard-card"><div class="dashboard-card-header"><h2 class="h6 fw-bold mb-0">Your leadership area</h2></div><div class="dashboard-card-body"><p class="small text-secondary mb-2">{{ profile.get_leader_type_display }}</p><p class="fw-semibold mb-3">{{ managed_area|default:'No managed area assigned' }}</p><a class="btn btn-outline-success btn-sm w-100" href="{% url 'leader_residents' %}">View residents in your area</a></div></section>
+    </aside>
+</div>
 
-        <section class="card shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h2 class="h4 text-success mb-2">Share a community announcement</h2>
-                <p class="text-muted">Post notices, local updates, or volunteer opportunities. These appear on the homepage in their own section, separate from project listings.</p>
-                <form method="post" action="{% url 'leader_announcement_create' %}">
-                    {% csrf_token %}
-                    {% if announcement_form.errors %}
-                        <div class="alert alert-danger" role="alert" aria-labelledby="announcement-error-heading">
-                            <h3 class="h6" id="announcement-error-heading">Please correct the errors below.</h3>
-                            <ul class="mb-0">
-                                {% for field in announcement_form %}
-                                    {% for error in field.errors %}
-                                        <li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a></li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in announcement_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    {% for field in announcement_form %}
-                        <div class="mb-3">
-                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}<div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
-                            {% if field.errors %}<ul class="text-danger small mb-0" id="{{ field.auto_id }}_error">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        </div>
-                    {% endfor %}
-                    <button class="btn btn-success" type="submit">Publish announcement</button>
-                </form>
-            </div>
-        </section>
-
-        <section class="card shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h2 class="h4 text-success mb-3">Your community announcements</h2>
-                {% for announcement in announcements %}
-                    <article class="border-start border-4 border-info bg-light rounded p-3 mb-3">
-                        <div class="d-flex flex-wrap justify-content-between gap-2">
-                            <h3 class="h5 mb-0">{{ announcement.title }}</h3>
-                            <span class="badge text-bg-info">{{ announcement.get_category_display }}</span>
-                        </div>
-                        <p class="text-muted small mt-2 mb-2">
-                            {{ announcement.area|default:managed_area }} · {{ announcement.created_at|date:"M j, Y" }}
-                            {% if not announcement.is_published %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}
-                            {% if announcement.expires_at %} · Expires {{ announcement.expires_at }}{% endif %}
-                        </p>
-                        <p class="mb-2">{{ announcement.body|truncatewords:35|linebreaksbr }}</p>
-                        <div class="d-flex gap-2 mt-3">
-                            <a class="btn btn-outline-success btn-sm" href="{% url 'leader_announcement_edit' announcement.pk %}">Edit announcement</a>
-                            <form method="post" action="{% url 'leader_announcement_delete' announcement.pk %}" onsubmit="return confirm('Delete this announcement? This cannot be undone.');">
-                                {% csrf_token %}
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Delete announcement</button>
-                            </form>
-                        </div>
-                    </article>
-                {% empty %}
-                    <p class="text-muted mb-0">You have not posted a community announcement yet.</p>
-                {% endfor %}
-            </div>
-        </section>
-
-        <section class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h4 text-success mb-3">Your project announcements</h2>
-                {% for project in projects %}
-                    <article class="border rounded p-3 mb-3">
-                        <div class="d-flex justify-content-between gap-3">
-                            <h3 class="h5">{{ project.title }}</h3>
-                            {% if project.date < today %}
-                                <span class="badge text-bg-secondary">Past project</span>
-                            {% else %}
-                                <span class="badge text-bg-secondary">{{ project.get_status_display }}</span>
-                            {% endif %}
-                        </div>
-                        <p class="text-muted mb-2">{{ project.date }} · {{ project.community.full_address }}</p>
-                        <p class="mb-2">{{ project.description|truncatewords:35 }}</p>
-                        {% if project.date >= today %}
-                            <a href="{% url 'project_detail' project.id %}">View public announcement</a>
-                        {% else %}
-                            <p class="text-muted mb-0">This announcement is no longer shown publicly.</p>
-                        {% endif %}
-                        <div class="d-flex gap-2 mt-3">
-                            <a class="btn btn-outline-success btn-sm" href="{% url 'leader_project_edit' project.id %}">Edit project</a>
-                            <form method="post" action="{% url 'leader_project_delete' project.id %}" onsubmit="return confirm('Delete this project announcement? This cannot be undone.');">
-                                {% csrf_token %}
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Delete project</button>
-                            </form>
-                        </div>
-                    </article>
-                {% empty %}
-                    <p class="text-muted mb-0">You have not posted a project yet.</p>
-                {% endfor %}
-            </div>
-        </section>
-    </div>
+<div class="row g-4 mt-1">
+    <div class="col-lg-7"><section class="dashboard-card leader-chart"><div class="dashboard-card-header"><h2 class="h6 fw-bold mb-0">Project overview</h2><small class="text-secondary">Projects by current status</small></div><div class="dashboard-card-body">
+        <div class="leader-chart-plot" role="img" aria-label="Projects by status: {{ planned_projects }} planned, {{ ongoing_projects }} ongoing, {{ completed_projects }} completed.">
+            <div class="leader-chart-bar-wrap"><strong class="small">{{ planned_projects }}</strong><div class="leader-chart-bar" style="height:{{ planned_bar_height }}%;"></div><span class="leader-chart-bar-label">Planned</span></div>
+            <div class="leader-chart-bar-wrap"><strong class="small">{{ ongoing_projects }}</strong><div class="leader-chart-bar" style="height:{{ ongoing_bar_height }}%;background:linear-gradient(180deg,#69bdf0,#3591c6)"></div><span class="leader-chart-bar-label">Ongoing</span></div>
+            <div class="leader-chart-bar-wrap"><strong class="small">{{ completed_projects }}</strong><div class="leader-chart-bar" style="height:{{ completed_bar_height }}%;background:linear-gradient(180deg,#f3c86c,#df9b23)"></div><span class="leader-chart-bar-label">Completed</span></div>
+        </div>
+    </div></section></div>
+    <div class="col-lg-5"><section class="dashboard-card leader-chart"><div class="dashboard-card-header"><h2 class="h6 fw-bold mb-0">Community participation</h2><small class="text-secondary">Attendance for your projects</small></div><div class="dashboard-card-body d-flex flex-wrap align-items-center justify-content-center gap-4">
+        <div class="leader-pie" style="background:{{ attendance_pie_style }}" role="img" aria-label="{{ attendance_percent }} percent of project signups attended"><div class="leader-pie-center">{{ total_participations }}<small>signups</small></div></div>
+        <div class="leader-legend"><div class="leader-legend-item"><span class="leader-legend-label"><i class="leader-legend-dot"></i>Attended</span><strong>{{ attended_participations }}</strong></div><div class="leader-legend-item"><span class="leader-legend-label"><i class="leader-legend-dot muted"></i>Not yet attended</span><strong>{{ not_attended_participations }}</strong></div><small class="text-secondary">{{ attendance_percent }}% attendance</small></div>
+    </div></section></div>
 </div>
 {% endblock %}
