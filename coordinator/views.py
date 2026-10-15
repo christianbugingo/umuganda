@@ -25,6 +25,7 @@ from coordinator.forms import (
     ProjectForm,
     RegisterForm,
 )
+from coordinator.contact import ContactMessageForm
 
 
 
@@ -39,10 +40,21 @@ from coordinator.models import (
     UserProfile,
     Volunteer,
     Testimonial,
+    ContactMessage,
 )
 
 
 def home(request):
+    contact_form = ContactMessageForm()
+    if request.method == 'POST' and request.POST.get('form_type') == 'contact':
+        contact_form = ContactMessageForm(request.POST)
+        if contact_form.is_valid():
+            ContactMessage.objects.create(**{
+                key: value for key, value in contact_form.cleaned_data.items()
+                if key != 'website'
+            })
+            messages.success(request, 'Thanks for reaching out. Your message has been received by the Umuganda team.')
+            return redirect(f'{reverse("home")}#contact')
     today = timezone.localdate()
     active_announcements = (
         Announcement.objects.filter(is_published=True)
@@ -81,6 +93,7 @@ def home(request):
         'journal_story_cards': journal_story_cards,
         'journal_photo_stories': journal_photo_stories,
         'is_volunteer': is_volunteer,
+        'contact_form': contact_form,
     })
 
 

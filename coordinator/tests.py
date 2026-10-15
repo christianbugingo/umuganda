@@ -22,6 +22,7 @@ from coordinator.models import (
     UserProfile,
     Volunteer,
     Testimonial,
+    ContactMessage,
 )
 
 
@@ -1045,3 +1046,49 @@ class AccessibilityTests(TestCase):
         self.assertContains(response, 'aria-invalid="true"')
         self.assertContains(response, 'id="id_username_error"')
         self.assertContains(response, 'href="#id_username"')
+
+
+class ContactMessageTests(TestCase):
+    def test_valid_contact_submission_is_stored_and_acknowledged(self):
+        response = self.client.post(reverse('home'), {
+            'form_type': 'contact',
+            'name': 'Aline Uwimana',
+            'email': 'aline@example.com',
+            'subject': 'Community cleanup',
+            'category': 'project',
+            'message': 'How can our neighbourhood add a cleanup activity?',
+            'website': '',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), 1)
+        self.assertContains(response, 'Your message has been received')
+
+    def test_invalid_email_is_not_stored(self):
+        response = self.client.post(reverse('home'), {
+            'form_type': 'contact',
+            'name': 'Aline Uwimana',
+            'email': 'not-an-email',
+            'subject': 'Question',
+            'category': 'question',
+            'message': 'A question for the team.',
+            'website': '',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), 0)
+        self.assertContains(response, 'Enter a valid email address')
+
+    def test_honeypot_submission_is_rejected(self):
+        response = self.client.post(reverse('home'), {
+            'form_type': 'contact',
+            'name': 'Spam bot',
+            'email': 'bot@example.com',
+            'subject': 'Spam',
+            'category': 'question',
+            'message': 'Spam message.',
+            'website': 'https://spam.example',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactMessage.objects.count(), 0)

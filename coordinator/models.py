@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.core.validators import validate_email
 
 class Community(models.Model):
     # Rwandan Administrative Structure
@@ -229,6 +230,27 @@ class JournalComment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.name} on {self.journal.title}'
+
+
+class ContactMessage(models.Model):
+    CATEGORY_CHOICES = [
+        ('question', 'General question'), ('support', 'Technical support'),
+        ('volunteer', 'Volunteer registration'), ('project', 'Community project'),
+        ('feedback', 'Feedback or idea'),
+    ]
+    name = models.CharField(max_length=120)
+    email = models.EmailField(max_length=254, validators=[validate_email])
+    subject = models.CharField(max_length=160)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    message = models.TextField(max_length=4000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+
+    def __str__(self):
+        return f'{self.subject} — {self.name}'
 
 
 class Volunteer(models.Model):

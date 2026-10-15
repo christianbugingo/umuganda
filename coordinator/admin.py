@@ -14,6 +14,7 @@ from .models import (
     UserProfile,
     Volunteer,
     Testimonial,
+    ContactMessage,
 )
 
 class CommunityAdmin(admin.ModelAdmin):
@@ -180,6 +181,13 @@ admin.site.register(Announcement, AnnouncementAdmin)
 admin.site.register(Testimonial, TestimonialAdmin)
 admin.site.register(UmugandaJournal, UmugandaJournalAdmin)
 admin.site.register(JournalComment, JournalCommentAdmin)
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'name', 'email', 'category', 'created_at', 'is_resolved')
+    list_filter = ('category', 'is_resolved', 'created_at')
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('name', 'email', 'subject', 'category', 'message', 'created_at')
+    list_editable = ('is_resolved',)
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
